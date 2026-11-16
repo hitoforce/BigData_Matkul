@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Analitik E-Commerce | Big Data Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #6366f1;
+    --primary-soft: #eef2ff;
+    --success: #059669;
+    --success-soft: #d1fae5;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --warning: #d97706;
+    --warning-soft: #fef3c7;
+    --info: #0284c7;
+    --info-soft: #e0f2fe;
+    --purple: #7c3aed;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --sidebar-w: 260px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    font-size: 14px;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+    color: #c7d2fe;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+  .sidebar-brand {
+    padding: 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .brand-text h1 { color: #fff; font-size: 15px; font-weight: 700; line-height: 1.2; }
+  .brand-text p { font-size: 11px; color: #a5b4fc; margin-top: 2px; }
+  .sidebar-nav {
+    flex: 1;
+    padding: 16px 12px;
+    overflow-y: auto;
+  }
+  .nav-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #818cf8;
+    padding: 12px 12px 6px;
+    font-weight: 600;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 9px;
+    color: #c7d2fe;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .nav-item.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+  }
+  .nav-icon { font-size: 17px; width: 20px; text-align: center; flex-shrink: 0; }
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px;
+    color: #818cf8;
+  }
+
+  /* ===== MAIN ===== */
+  .main {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+  }
+  .topbar {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(8px);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .menu-toggle {
+    display: none;
+    background: none; border: none;
+    font-size: 22px; cursor: pointer;
+    color: var(--text);
+  }
+  .page-title h2 { font-size: 18px; font-weight: 700; color: var(--text); }
+  .page-title p { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--success-soft);
+    color: var(--success);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+  .content { padding: 28px 32px 48px; }
+  .page { display: none; animation: fadeIn 0.35s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== KPI CARDS ===== */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 18px;
+    margin-bottom: 26px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .kpi-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--primary);
+  }
+  .kpi-card.success::before { background: var(--success); }
+  .kpi-card.danger::before { background: var(--danger); }
+  .kpi-card.warning::before { background: var(--warning); }
+  .kpi-card.info::before { background: var(--info); }
+  .kpi-card.purple::before { background: var(--purple); }
+  .kpi-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .kpi-label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+  .kpi-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .kpi-card.success .kpi-icon { background: var(--success-soft); }
+  .kpi-card.danger .kpi-icon { background: var(--danger-soft); }
+  .kpi-card.warning .kpi-icon { background: var(--warning-soft); }
+  .kpi-card.info .kpi-icon { background: var(--info-soft); }
+  .kpi-card.purple .kpi-icon { background: var(--primary-soft); }
+  .kpi-card:not(.success):not(.danger):not(.warning):not(.info):not(.purple) .kpi-icon { background: var(--primary-soft); }
+  .kpi-value { font-size: 25px; font-weight: 700; color: var(--text); line-height: 1.1; }
+  .kpi-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; }
+
+  /* ===== CHARTS ===== */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+  }
+  .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .chart-header h3 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 9px; }
+  .chart-header h3::before {
+    content: '';
+    width: 4px; height: 16px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+  .chart-badge {
+    font-size: 10.5px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+  .chart-container { position: relative; height: 280px; }
+
+  /* ===== TABLE ===== */
+  .table-card {
+    background: var(--card);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .table-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .table-header h3 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .table-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .search-box {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12.5px;
+    width: 250px;
+    outline: none;
+    transition: all 0.2s;
+    background: #f8fafc;
+    font-family: inherit;
+  }
+  .search-box:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px var(--primary-soft); }
+  .filter-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 12.5px;
+    background: #f8fafc;
+    outline: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--primary); }
+  .table-scroll { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead { position: sticky; top: 0; z-index: 10; }
+  th {
+    background: #f8fafc;
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; white-space: nowrap; }
+  tbody tr { transition: background 0.15s; }
+  tbody tr:hover { background: #f8fafc; }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-selesai { background: var(--success-soft); color: var(--success); }
+  .badge-batal { background: var(--danger-soft); color: var(--danger); }
+  .badge-info { background: var(--info-soft); color: var(--info); }
+  .badge-warning { background: var(--warning-soft); color: var(--warning); }
+  .badge-purple { background: var(--primary-soft); color: var(--primary); }
+
+  /* ===== REPORT ===== */
+  .report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .report-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+  }
+  .report-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .report-card h3 .rc-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    background: var(--primary-soft);
+  }
+  .insight-list { list-style: none; }
+  .insight-list li {
+    padding: 10px 0;
+    border-bottom: 1px dashed #e2e8f0;
+    font-size: 13px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    color: #334155;
+  }
+  .insight-list li:last-child { border-bottom: none; }
+  .insight-list li::before {
+    content: '✓';
+    color: var(--success);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .insight-list.alert li::before { content: '⚠'; color: var(--warning); }
+  .highlight-num { color: var(--primary); font-weight: 700; }
+
+  /* Progress bars */
+  .bar-row { margin-bottom: 14px; }
+  .bar-top { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+  .bar-top .bar-name { color: var(--text); font-weight: 500; }
+  .bar-top .bar-val { color: var(--text-muted); font-weight: 600; }
+  .bar-track { height: 8px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 1s ease; }
+
+  /* Summary banner */
+  .summary-banner {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    border-radius: 16px;
+    padding: 26px 30px;
+    margin-bottom: 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    box-shadow: 0 10px 30px rgba(79,70,229,0.25);
+  }
+  .summary-banner h2 { font-size: 19px; font-weight: 700; margin-bottom: 6px; }
+  .summary-banner p { font-size: 13px; opacity: 0.9; max-width: 600px; }
+  .summary-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+  .summary-stat { text-align: right; }
+  .summary-stat .num { font-size: 24px; font-weight: 700; }
+  .summary-stat .lbl { font-size: 11px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Stat list rows */
+  .stat-rows { display: flex; flex-direction: column; gap: 2px; }
+  .stat-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .sr-label { color: #475569; display: flex; align-items: center; gap: 8px; }
+  .stat-row .sr-value { font-weight: 700; color: var(--text); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .menu-toggle { display: block; }
+    .content { padding: 20px 16px 40px; }
+    .topbar { padding: 14px 16px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .summary-banner { padding: 20px; }
+  }
+  /* overlay */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 99;
+  }
+  .overlay.open { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">📊</div>
+    <div class="brand-text">
+      <h1>Analitik E-Commerce</h1>
+      <p>Big Data Dashboard</p>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Menu Utama</div>
+    <button class="nav-item active" data-page="dashboard">
+      <span class="nav-icon">🏠</span> Dashboard
+    </button>
+    <button class="nav-item" data-page="laporan">
+      <span class="nav-icon">📑</span> Laporan Ringkas
+    </button>
+    <div class="nav-section-label">Analisis Data</div>
+    <button class="nav-item" data-page="pesanan">
+      <span class="nav-icon">📦</span> Data Pesanan
+    </button>
+    <button class="nav-item" data-page="wilayah">
+      <span class="nav-icon">🗺️</span> Analisis Wilayah
+    </button>
+    <button class="nav-item" data-page="pembayaran">
+      <span class="nav-icon">💳</span> Pembayaran & Kirim
+    </button>
+    <button class="nav-item" data-page="produk">
+      <span class="nav-icon">🏷️</span> Kategori Produk
+    </button>
+    <button class="nav-item" data-page="pembatalan">
+      <span class="nav-icon">❌</span> Analisis Pembatalan
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div>📅 Data Periode ORD_0003996 - ORD_0004422</div>
+    <div style="margin-top:4px;">Total 459 pesanan</div>
+  </div>
+</aside>
+<div class="overlay" id="overlay"></div>
+
+<!-- ===== MAIN ===== -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <div class="page-title">
+        <h2 id="pageTitleText">Dashboard</h2>
+        <p id="pageSubText">Ringkasan metrik utama bisnis</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-badge"><span class="live-dot"></span> Data Aktif</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ========== PAGE: DASHBOARD ========== -->
+    <section class="page active" id="page-dashboard">
+      <div class="summary-banner">
+        <div>
+          <h2>Ringkasan Eksekutif</h2>
+          <p>Analisis menyeluruh terhadap 459 pesanan e-commerce mencakup performa penjualan, distribusi wilayah, metode pembayaran, dan tingkat pembatalan.</p>
+        </div>
+        <div class="summary-stats">
+          <div class="summary-stat">
+            <div class="num" id="sbOrders">0</div>
+            <div class="lbl">Total Pesanan</div>
+          </div>
+          <div class="summary-stat">
+            <div class="num" id="sbRevenue">Rp 0</div>
+            <div class="lbl">Pendapatan</div>
+          </div>
+          <div class="summary-stat">
+            <div class="num" id="sbCancel">0%</div>
+            <div class="lbl">Pembatalan</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpiDashboard"></div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Distribusi Status Pesanan</h3>
+            <span class="chart-badge">Overview</span>
+          </div>
+          <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Top 10 Provinsi</h3>
+            <span class="chart-badge">By Order</span>
+          </div>
+          <div class="chart-container"><canvas id="chartProvince"></canvas></div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Tren Nilai Pesanan (Sampel 30)</h3>
+            <span class="chart-badge">Selesai</span>
+          </div>
+          <div class="chart-container"><canvas id="chartTrend"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>Metode Pembayaran</h3>
+            <span class="chart-badge">Populer</span>
+          </div>
+          <div class="chart-container"><canvas id="chartPaymentMini"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: LAPORAN ========== -->
+    <section class="page" id="page-laporan">
+      <div class="summary-banner" style="background: linear-gradient(135deg, #059669 0%, #0d9488 100%);">
+        <div>
+          <h2>📑 Laporan Ringkas & Insight</h2>
+          <p>Temuan utama dari analisis data untuk mendukung pengambilan keputusan strategis.</p>
+        </div>
+      </div>
+
+      <div class="report-grid">
+        <div class="report-card">
+          <h3><span class="rc-icon">📈</span> Performa Penjualan</h3>
+          <ul class="insight-list" id="insightSales"></ul>
+        </div>
+        <div class="report-card">
+          <h3><span class="rc-icon">🗺️</span> Distribusi Wilayah</h3>
+          <ul class="insight-list" id="insightRegion"></ul>
+        </div>
+        <div class="report-card">
+          <h3><span class="rc-icon">💳</span> Pola Pembayaran</h3>
+          <ul class="insight-list" id="insightPayment"></ul>
+        </div>
+        <div class="report-card">
+          <h3><span class="rc-icon">⚠️</span> Risiko & Pembatalan</h3>
+          <ul class="insight-list alert" id="insightRisk"></ul>
+        </div>
+        <div class="report-card">
+          <h3><span class="rc-icon">🏷️</span> Kategori Produk</h3>
+          <ul class="insight-list" id="insightProduct"></ul>
+        </div>
+        <div class="report-card">
+          <h3><span class="rc-icon">🚚</span> Pengiriman</h3>
+          <ul class="insight-list" id="insightShipping"></ul>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header"><h3>Revenue per Provinsi (Top 8)</h3></div>
+          <div class="chart-container"><canvas id="chartRevProvince"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3>Perbandingan Status per Metode Bayar</h3></div>
+          <div class="chart-container"><canvas id="chartPayStatus"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: PESANAN ========== -->
+    <section class="page" id="page-pesanan">
+      <div class="kpi-grid" id="kpiPesanan"></div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h3>📋 Data Pesanan Lengkap</h3>
+          <div class="table-tools">
+            <select class="filter-select" id="filterStatus">
+              <option value="">Semua Status</option>
+              <option value="Selesai">Selesai</option>
+              <option value="Batal">Batal</option>
+            </select>
+            <input type="text" class="search-box" id="searchOrders" placeholder="🔍 Cari order / kota / kategori...">
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Order ID</th><th>Qty</th><th>Berat (gr)</th><th>Kategori</th>
+                <th>Status</th><th>Pengiriman</th><th>Pembayaran</th>
+                <th>Kota</th><th>Provinsi</th><th>Total Bayar</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyOrders"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: WILAYAH ========== -->
+    <section class="page" id="page-wilayah">
+      <div class="kpi-grid" id="kpiWilayah"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header"><h3>Top 10 Provinsi (Order)</h3></div>
+          <div class="chart-container"><canvas id="chartProvinceFull"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3>Top 10 Provinsi (Revenue)</h3></div>
+          <div class="chart-container"><canvas id="chartRevProvinceFull"></canvas></div>
+        </div>
+      </div>
+      <div class="report-grid">
+        <div class="report-card">
+          <h3><span class="rc-icon">🏙️</span> Top 10 Kota/Kabupaten</h3>
+          <div class="stat-rows" id="topCitiesList"></div>
+        </div>
+        <div class="report-card">
+          <h3><span class="rc-icon">📊</span> Distribusi per Pulau (Estimasi)</h3>
+          <div class="chart-container" style="height:260px;"><canvas id="chartIsland"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: PEMBAYARAN ========== -->
+    <section class="page" id="page-pembayaran">
+      <div class="kpi-grid" id="kpiPembayaran"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header"><h3>Distribusi Metode Pembayaran</h3></div>
+          <div class="chart-container"><canvas id="chartPaymentFull"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3>Opsi Pengiriman Terpopuler</h3></div>
+          <div class="chart-container"><canvas id="chartShippingFull"></canvas></div>
+        </div>
+      </div>
+      <div class="report-grid">
+        <div class="report-card">
+          <h3><span class="rc-icon">💰</span> Revenue per Metode Bayar</h3>
+          <div class="stat-rows" id="paymentRevenueList"></div>
+        </div>
+        <div class="report-card">
+          <h3><span class="rc-icon">📦</span> Order per Opsi Kirim</h3>
+          <div class="stat-rows" id="shippingOrderList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: PRODUK ========== -->
+    <section class="page" id="page-produk">
+      <div class="kpi-grid" id="kpiProduk"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header"><h3>Top 10 Kategori Produk</h3></div>
+          <div class="chart-container"><canvas id="chartCategoryFull"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3>Kategori per Revenue (Top 8)</h3></div>
+          <div class="chart-container"><canvas id="chartCategoryRev"></canvas></div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>🏷️ Detail Semua Kategori</h3></div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Kategori</th><th>Jumlah Pesanan</th><th>Total Qty</th><th>Total Revenue</th></tr></thead>
+            <tbody id="tbodyCategories"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAGE: PEMBATALAN ========== -->
+    <section class="page" id="page-pembatalan">
+      <div class="kpi-grid" id="kpiPembatalan"></div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header"><h3>Alasan Pembatalan</h3></div>
+          <div class="chart-container"><canvas id="chartCancelFull"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3>Pembatalan per Provinsi (Top 8)</h3></div>
+          <div class="chart-container"><canvas id="chartCancelProvince"></canvas></div>
+        </div>
+      </div>
+      <div class="report-grid">
+        <div class="report-card">
+          <h3><span class="rc-icon">📋</span> Daftar Alasan Pembatalan</h3>
+          <div class="stat-rows" id="cancelReasonList"></div>
+        </div>
+        <div class="report-card">
+          <h3><span class="rc-icon">💡</span> Rekomendasi Perbaikan</h3>
+          <ul class="insight-list" id="cancelRecommendations"></ul>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+// ============================================================
+// RAW DATA — embedded compact
+// ============================================================
+const rawData = [
+["ORD_0003996",2,3400,0,"-","Nampan / Tray","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA TANGERANG","BANTEN",7200,"Rp 20.000","Rp 27.200","Rp 27.200"],
+["ORD_0003997",1,100,0,"-","Aksesoris Pintu","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Reguler (Cashless)","Online Payment","KAB. BOGOR","JAWA BARAT",0,"-","-","Rp 9.500"],
+["ORD_0003998",1,750,0,"-","Baskom / Mangkok Besar","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PEMATANG SIANTAR","SUMATERA UTARA",11300,"Rp 25.000","Rp 46.552","Rp 36.300"],
+["ORD_0003999",1,150,0,"-","Pengolah Bumbu / Sayur","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. NGAWI","JAWA TIMUR",0,"Rp 17.000","Rp 31.160","Rp 17.000"],
+["ORD_0004000",1,100,0,"-","Seal / Baut / Roof","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. CIREBON","JAWA BARAT",0,"Rp 15.000","Rp 19.200","Rp 15.000"],
+["ORD_0004001",1,100,0,"-","Aksesoris Pintu","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 11.000","Rp 10.000"],
+["ORD_0004002",3,300,0,"-","Seal / Baut / Roof","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Reguler (Cashless)","Online Payment","KAB. BANDUNG BARAT","JAWA BARAT",0,"-","-","Rp 17.000"],
+["ORD_0004003",2,200,0,"-","Saringan / Strainer","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 8.000","Rp 33.240","Rp 8.000"],
+["ORD_0004004",2,2000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 35.800","Rp 8.000"],
+["ORD_0004005",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","SeaBank Bayar Instan","KAB. TANGERANG","BANTEN",0,"Rp 9.500","Rp 18.000","Rp 9.500"],
+["ORD_0004006",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KOTA CIREBON","JAWA BARAT",0,"Rp 14.000","Rp 20.998","Rp 14.000"],
+["ORD_0004007",1,500,0,"-","Tempat Nasi","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA SEMARANG","JAWA TENGAH",0,"Rp 17.000","Rp 13.166","Rp 17.000"],
+["ORD_0004008",1,500,0,"-","Celengan","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Reguler (Cashless)","Saldo ShopeePay","KAB. MALANG","JAWA TIMUR",0,"-","-","Rp 17.000"],
+["ORD_0004009",2,400,0,"-","Mangkok Sambal / Saus","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pengiriman gagal","Agen SPX Express","COD (Bayar di Tempat)","KAB. MUSI BANYUASIN","SUMATERA SELATAN",0,"-","-","Rp 27.000"],
+["ORD_0004010",1,1000,0,"-","Lunch Box / Rantang","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA DEPOK","JAWA BARAT",0,"Rp 8.000","Rp 54.690","Rp 8.000"],
+["ORD_0004011",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAMBI","JAMBI",0,"Rp 20.000","Rp 18.576","Rp 20.000"],
+["ORD_0004012",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA DEPOK","JAWA BARAT",0,"Rp 8.000","Rp 18.576","Rp 8.000"],
+["ORD_0004013",2,3400,0,"-","Nampan / Tray","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA TANGERANG SELATAN","BANTEN",7200,"Rp 20.000","Rp 26.700","Rp 27.200"],
+["ORD_0004014",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KAB. BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 9.742","Rp 8.000"],
+["ORD_0004015",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","SPX Hemat","COD (Bayar di Tempat)","KAB. PASAMAN","SUMATERA BARAT",0,"Rp 20.700","Rp 32.200","Rp 20.700"],
+["ORD_0004016",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. PEKALONGAN","JAWA TENGAH",0,"Rp 17.000","Rp 19.200","Rp 17.000"],
+["ORD_0004017",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANDUNG","JAWA BARAT",0,"Rp 9.000","Rp 21.592","Rp 9.000"],
+["ORD_0004018",3,600,0,"-","Nampan / Tray","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. LEBAK","BANTEN",0,"Rp 16.000","Rp 21.280","Rp 16.000"],
+["ORD_0004019",2,2000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA BANDAR LAMPUNG","LAMPUNG",0,"Rp 19.000","Rp 36.562","Rp 19.000"],
+["ORD_0004020",1,1000,0,"-","Tempat Nasi","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. REMBANG","JAWA TENGAH",0,"Rp 17.000","Rp 22.000","Rp 17.000"],
+["ORD_0004021",1,80,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. INDRAMAYU","JAWA BARAT",6000,"Rp 10.000","Rp 12.960","Rp 16.000"],
+["ORD_0004022",1,500,0,"-","Celengan","Selesai","","SPX Hemat","Online Payment","KOTA PEKANBARU","RIAU",0,"Rp 18.800","Rp 18.900","Rp 18.800"],
+["ORD_0004023",2,1000,0,"-","Celengan","Selesai","","SPX Hemat","Online Payment","KOTA PEKANBARU","RIAU",0,"Rp 18.800","Rp 35.800","Rp 18.800"],
+["ORD_0004024",2,1000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA DUMAI","RIAU",0,"Rp 39.000","Rp 42.184","Rp 39.000"],
+["ORD_0004025",2,2000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. CILACAP","JAWA TENGAH",8800,"Rp 20.000","Rp 52.792","Rp 28.800"],
+["ORD_0004026",4,3500,0,"-","Baskom / Mangkok Besar, Other, Peralatan Makan, Saringan / Strainer","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 47.885","Rp 10.000"],
+["ORD_0004027",4,20000,0,"-","Tempat Nasi","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Kargo","Online Payment","KAB. MALANG","JAWA TIMUR",0,"-","-","Rp 79.500"],
+["ORD_0004028",4,20000,0,"-","Tempat Nasi","Selesai","","Kargo-JNE Trucking (JTR)","Online Payment","KAB. MALANG","JAWA TIMUR",79500,"-","Rp 182.500","Rp 79.500"],
+["ORD_0004029",2,1000,0,"-","Celengan","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","Online Payment","KOTA SURABAYA","JAWA TIMUR",0,"-","-","Rp 15.500"],
+["ORD_0004030",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 10.500","Rp 8.000"],
+["ORD_0004031",1,100,0,"-","Aksesoris Pintu","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"Rp 9.500","Rp 10.955","Rp 9.500"],
+["ORD_0004032",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 14.182","Rp 10.000"],
+["ORD_0004033",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BANDUNG BARAT","JAWA BARAT",0,"Rp 17.000","Rp 18.576","Rp 17.000"],
+["ORD_0004034",1,200,0,"-","Mangkok Sambal / Saus","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pengiriman gagal","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. LAHAT","SUMATERA SELATAN",0,"-","-","Rp 35.000"],
+["ORD_0004035",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA DEPOK","JAWA BARAT",0,"Rp 8.000","Rp 18.680","Rp 8.000"],
+["ORD_0004036",3,4500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KAB. BOGOR","JAWA BARAT",0,"Rp 14.400","Rp 55.338","Rp 14.400"],
+["ORD_0004037",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. LOMBOK BARAT","NUSA TENGGARA BARAT (NTB)",9500,"Rp 25.000","Rp 42.120","Rp 34.500"],
+["ORD_0004038",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. LOMBOK BARAT","NUSA TENGGARA BARAT (NTB)",14500,"Rp 20.000","Rp 47.320","Rp 34.500"],
+["ORD_0004039",1,4000,0,"-","Baskom / Mangkok Besar","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. TANGERANG","BANTEN",800,"Rp 20.000","Rp 22.112","Rp 20.800"],
+["ORD_0004040",2,1600,0,"-","Keranjang","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BREBES","JAWA TENGAH",0,"Rp 17.000","Rp 21.800","Rp 17.000"],
+["ORD_0004041",3,600,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA UTARA","DKI JAKARTA",0,"Rp 10.000","Rp 48.500","Rp 10.000"],
+["ORD_0004042",3,3300,0,"-","Celengan, Keranjang, Plastik / Wadah Plastik","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. CIAMIS","JAWA BARAT",0,"Rp 16.000","Rp 41.040","Rp 16.000"],
+["ORD_0004043",1,1000,0,"-","Seal / Baut / Roof","Batal","Dibatalkan oleh Pembeli. Alasan: Proses pembayaran sulit","Reguler (Cashless)","Indomaret/i.Saku","KOTA BANJARBARU","KALIMANTAN SELATAN",0,"-","-","Rp 39.000"],
+["ORD_0004044",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAMBI","JAMBI",0,"Rp 20.000","Rp 21.800","Rp 20.000"],
+["ORD_0004045",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 17.692","Rp 8.000"],
+["ORD_0004046",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA TANGERANG SELATAN","BANTEN",0,"Rp 8.000","Rp 18.343","Rp 8.000"],
+["ORD_0004047",3,600,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KUANTAN SINGINGI","RIAU",0,"Rp 37.500","Rp 47.800","Rp 37.500"],
+["ORD_0004048",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 8.000","Rp 18.472","Rp 8.000"],
+["ORD_0004049",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SUKOHARJO","JAWA TENGAH",0,"-","-","Rp 16.000"],
+["ORD_0004050",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA PUSAT","DKI JAKARTA",0,"Rp 10.000","Rp 21.800","Rp 10.000"],
+["ORD_0004051",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 18.900","Rp 10.000"],
+["ORD_0004052",2,1000,0,"-","Celengan","Selesai","","Reguler (Cashless)-JNE Reguler","Saldo ShopeePay","KAB. BLORA","JAWA TENGAH",0,"Rp 17.000","Rp 35.500","Rp 17.000"],
+["ORD_0004053",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BONDOWOSO","JAWA TIMUR",0,"Rp 16.000","Rp 17.120","Rp 16.000"],
+["ORD_0004054",1,400,0,"-","Botol / Gelas / Mug","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 8.917","Rp 8.000"],
+["ORD_0004055",2,1000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 41.600","Rp 10.000"],
+["ORD_0004056",10,2000,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-J&T Economy","Saldo ShopeePay","KAB. MANDAILING NATAL","SUMATERA UTARA",9000,"Rp 60.000","Rp 160.065","Rp 69.000"],
+["ORD_0004057",2,200,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",8000,"-","Rp 27.094","Rp 8.000"],
+["ORD_0004058",10,2500,0,"-","Lunch Box / Rantang","Selesai","","Same Day-SPX Sameday","SPayLater","KAB. TANGERANG","BANTEN",8500,"Rp 20.000","Rp 138.259","Rp 28.500"],
+["ORD_0004059",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 11.500","Rp 8.000"],
+["ORD_0004060",2,1000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KAB. BEKASI","JAWA BARAT",0,"Rp 10.000","Rp 41.600","Rp 10.000"],
+["ORD_0004061",1,1000,0,"-","Tempat Nasi","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KAB. BOGOR","JAWA BARAT",0,"Rp 10.000","Rp 21.705","Rp 10.000"],
+["ORD_0004062",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. LOMBOK TENGAH","NUSA TENGGARA BARAT (NTB)",14500,"Rp 20.000","Rp 32.000","Rp 34.500"],
+["ORD_0004063",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. PASURUAN","JAWA TIMUR",0,"Rp 16.000","Rp 21.592","Rp 16.000"],
+["ORD_0004064",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA MAGELANG","JAWA TENGAH",0,"Rp 15.000","Rp 17.120","Rp 15.000"],
+["ORD_0004065",5,1000,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAMBI","JAMBI",0,"Rp 20.000","Rp 81.600","Rp 20.000"],
+["ORD_0004066",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Need to change delivery address","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SUKABUMI","JAWA BARAT",0,"-","-","Rp 13.500"],
+["ORD_0004067",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BREBES","JAWA TENGAH",0,"Rp 17.000","Rp 21.592","Rp 17.000"],
+["ORD_0004068",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA BEKASI","JAWA BARAT",0,"-","-","Rp 9.500"],
+["ORD_0004069",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANGKALAN","JAWA TIMUR",0,"Rp 16.000","Rp 33.240","Rp 16.000"],
+["ORD_0004070",5,1000,0,"-","Peralatan Makan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. SANGGAU","KALIMANTAN BARAT",0,"Rp 40.000","Rp 153.880","Rp 40.000"],
+["ORD_0004071",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-JNE Reguler","Saldo ShopeePay","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 10.000","Rp 11.860","Rp 10.000"],
+["ORD_0004072",3,300,0,"-","Aksesoris Pintu","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA JAKARTA PUSAT","DKI JAKARTA",0,"Rp 10.000","Rp 30.500","Rp 10.000"],
+["ORD_0004073",1,3000,0,"-","Other","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA BEKASI","JAWA BARAT",0,"Rp 20.800","Rp 1.489.000","Rp 20.800"],
+["ORD_0004074",1,4000,0,"-","Seal / Baut / Roof","Selesai","","Instant (Versi Lama)-SPX Instant (Versi Lama)","Saldo ShopeePay","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 34.000","Rp 347.000","Rp 34.000"],
+["ORD_0004075",3,1200,0,"-","Botol / Gelas / Mug, Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. ROKAN HILIR","RIAU",0,"Rp 36.500","Rp 38.839","Rp 36.500"],
+["ORD_0004076",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA DEPOK","JAWA BARAT",0,"Rp 9.500","Rp 18.576","Rp 9.500"],
+["ORD_0004077",1,4000,0,"-","Seal / Baut / Roof","Selesai","","Kargo-JNE Trucking (JTR)","Saldo ShopeePay","KOTA PONTIANAK","KALIMANTAN BARAT",37000,"Rp 20.000","Rp 383.500","Rp 57.000"],
+["ORD_0004078",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. PONOROGO","JAWA TIMUR",0,"Rp 16.000","Rp 33.000","Rp 16.000"],
+["ORD_0004079",1,1000,0,"-","Tempat Nasi","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA SEMARANG","JAWA TENGAH",0,"Rp 17.000","Rp 16.600","Rp 17.000"],
+["ORD_0004080",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA BANDAR LAMPUNG","LAMPUNG",0,"Rp 16.000","Rp 18.500","Rp 16.000"],
+["ORD_0004081",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KAB. BEKASI","JAWA BARAT",0,"Rp 9.500","Rp 16.655","Rp 9.500"],
+["ORD_0004082",4,400,0,"-","Piring","Selesai","","Agen SPX Express","Online Payment","KOTA LUBUK LINGGAU","SUMATERA SELATAN",3500,"Rp 25.000","Rp 41.500","Rp 28.500"],
+["ORD_0004083",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA SURABAYA","JAWA TIMUR",0,"Rp 15.500","Rp 20.561","Rp 15.500"],
+["ORD_0004084",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BONDOWOSO","JAWA TIMUR",0,"Rp 16.000","Rp 11.920","Rp 16.000"],
+["ORD_0004085",2,1000,1,"-","Botol / Gelas / Mug, Spatula","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BANGKALAN","JAWA TIMUR",0,"Rp 17.000","Rp 9.140","Rp 17.000"],
+["ORD_0004086",3,1350,0,"-","Botol / Gelas / Mug, Other, Peralatan Kamar Mandi","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"Rp 8.000","Rp 20.000","Rp 8.000"],
+["ORD_0004087",4,1000,0,"-","Lunch Box / Rantang","Batal","Dibatalkan oleh Pembeli. Alasan: Need to change delivery address","Reguler (Cashless)-SPX Standard","Online Payment","KOTA BANDUNG","JAWA BARAT",0,"-","-","Rp 13.000"],
+["ORD_0004088",4,1000,0,"-","Lunch Box / Rantang","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. BANDUNG","JAWA BARAT",0,"Rp 11.000","Rp 56.000","Rp 11.000"],
+["ORD_0004089",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANDUNG","JAWA BARAT",0,"Rp 9.500","Rp 18.576","Rp 9.500"],
+["ORD_0004090",1,500,0,"-","Gantungan Baju / Hanger","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BEKASI","JAWA BARAT",0,"-","-","Rp 8.000"],
+["ORD_0004091",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 11.500","Rp 8.000"],
+["ORD_0004092",10,2000,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANGKA","BANGKA BELITUNG",11000,"Rp 60.000","Rp 170.520","Rp 71.000"],
+["ORD_0004093",1,1200,0,"-","Peralatan Makan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. JEMBER","JAWA TIMUR",0,"Rp 16.000","Rp 20.800","Rp 16.000"],
+["ORD_0004094",1,1000,0,"-","Bangku / Kursi Kecil","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA JAKARTA UTARA","DKI JAKARTA",0,"Rp 10.000","Rp 21.000","Rp 10.000"],
+["ORD_0004095",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA TANGERANG","BANTEN",0,"Rp 9.500","Rp 21.800","Rp 9.500"],
+["ORD_0004096",121,24200,0,"Rp 181.500","Nampan / Tray","Selesai","","Kargo-JNE Trucking (JTR)","Online Payment","KOTA PALEMBANG","SUMATERA SELATAN",99301,"Rp 20.000","Rp 657.901","Rp 119.301"],
+["ORD_0004097",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KUANTAN SINGINGI","RIAU",0,"Rp 37.500","Rp 43.224","Rp 37.500"],
+["ORD_0004098",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 16.391","Rp 8.000"],
+["ORD_0004099",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA MEDAN","SUMATERA UTARA",0,"-","-","Rp 23.000"],
+["ORD_0004100",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA TIMUR","DKI JAKARTA",8000,"-","Rp 19.200","Rp 8.000"],
+["ORD_0004101",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KAB. TANGERANG","BANTEN",0,"Rp 8.000","Rp 20.274","Rp 8.000"],
+["ORD_0004102",1,30,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SERANG","BANTEN",3000,"Rp 10.000","Rp 9.840","Rp 13.000"],
+["ORD_0004103",1,1000,0,"-","Teko / Jug","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. TANAH LAUT","KALIMANTAN SELATAN",9100,"Rp 25.000","Rp 47.384","Rp 34.100"],
+["ORD_0004104",1,100,0,"-","Saringan / Strainer","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","SPayLater","KAB. KARAWANG","JAWA BARAT",0,"-","-","Rp 10.000"],
+["ORD_0004105",3,450,0,"-","Aksesoris Mandi","Selesai","","SPX Hemat","Saldo ShopeePay","KOTA BANDAR LAMPUNG","LAMPUNG",0,"Rp 8.900","Rp 14.897","Rp 8.900"],
+["ORD_0004106",1,1000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA TANGERANG","BANTEN",0,"Rp 8.000","Rp 18.160","Rp 8.000"],
+["ORD_0004107",1,700,0,"-","Rak / Rak Serbaguna","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. MALANG","JAWA TIMUR",0,"Rp 17.000","Rp 24.440","Rp 17.000"],
+["ORD_0004108",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-J&T Economy","COD (Bayar di Tempat)","KAB. BANGGAI","SULAWESI TENGAH",16000,"Rp 60.000","Rp 31.000","Rp 76.000"],
+["ORD_0004109",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","SeaBank Bayar Instan","KAB. TANGERANG","BANTEN",0,"Rp 9.500","Rp 16.000","Rp 9.500"],
+["ORD_0004110",6,3000,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA BEKASI","JAWA BARAT",0,"-","-","Rp 30.000"],
+["ORD_0004111",6,3000,0,"-","Celengan","Selesai","","J&T Express","Saldo ShopeePay","KOTA BEKASI","JAWA BARAT",18900,"-","Rp 136.824","Rp 18.900"],
+["ORD_0004112",2,1000,0,"-","Celengan","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","Online Payment","KOTA BEKASI","JAWA BARAT",0,"-","-","Rp 8.000"],
+["ORD_0004113",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA DEPOK","JAWA BARAT",0,"Rp 8.000","Rp 21.800","Rp 8.000"],
+["ORD_0004114",2,2000,0,"-","Celengan","Selesai","","Reguler (Cashless)-JNE Reguler","SPayLater","KOTA BANDUNG","JAWA BARAT",0,"Rp 13.000","Rp 35.239","Rp 13.000"],
+["ORD_0004115",1,500,0,"-","Celengan","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","Saldo ShopeePay","KOTA JAKARTA BARAT","DKI JAKARTA",0,"-","-","Rp 8.000"],
+["ORD_0004116",2,2000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. TANAH DATAR","SUMATERA BARAT",10000,"Rp 25.000","Rp 49.651","Rp 35.000"],
+["ORD_0004117",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. LAMONGAN","JAWA TIMUR",0,"-","-","Rp 17.000"],
+["ORD_0004118",1,500,0,"-","Celengan","Selesai","","SPX Hemat","Online Payment","KOTA TANGERANG SELATAN","BANTEN",5100,"-","Rp 26.900","Rp 5.100"],
+["ORD_0004119",1,30,0,"-","Aksesoris Pintu","Selesai","","Reguler (Cashless)-JNE Reguler","Pembayaran dibebaskan","KOTA JAKARTA PUSAT","DKI JAKARTA",0,"Rp 10.000","-","Rp 10.000"],
+["ORD_0004120",3,600,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KOTA BARU","KALIMANTAN SELATAN",8400,"Rp 25.000","Rp 58.096","Rp 33.400"],
+["ORD_0004121",2,600,0,"-","Nampan / Tray","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA BOGOR","JAWA BARAT",0,"Rp 10.000","Rp 26.000","Rp 10.000"],
+["ORD_0004122",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA SERANG","BANTEN",0,"Rp 10.000","Rp 32.000","Rp 10.000"],
+["ORD_0004123",2,3000,0,"-","Celengan, Keranjang","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA DEPOK","JAWA BARAT",0,"Rp 18.000","Rp 65.800","Rp 18.000"],
+["ORD_0004124",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA SURAKARTA (SOLO)","JAWA TENGAH",0,"Rp 14.500","Rp 21.592","Rp 14.500"],
+["ORD_0004125",1,2000,0,"-","Baskom / Mangkok Besar","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Hemat Kargo-SPX Hemat","SPayLater","KAB. LUWU TIMUR","SULAWESI SELATAN",0,"-","-","Rp 77.000"],
+["ORD_0004126",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOJONEGORO","JAWA TIMUR",1000,"Rp 15.000","Rp 18.160","Rp 16.000"],
+["ORD_0004127",1,500,0,"-","Celengan","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Reguler (Cashless)","Online Payment","KAB. KARAWANG","JAWA BARAT",0,"-","-","Rp 11.000"],
+["ORD_0004128",1,750,0,"-","Baskom / Mangkok Besar","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BANYUWANGI","JAWA TIMUR",0,"Rp 17.000","Rp 34.800","Rp 17.000"],
+["ORD_0004129",1,1200,0,"-","Peralatan Makan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA TASIKMALAYA","JAWA BARAT",0,"Rp 14.000","Rp 28.080","Rp 14.000"],
+["ORD_0004130",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. PATI","JAWA TENGAH",0,"Rp 16.000","Rp 16.600","Rp 16.000"],
+["ORD_0004131",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 10.000","Rp 20.366","Rp 10.000"],
+["ORD_0004132",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 30.120","Rp 8.000"],
+["ORD_0004133",2,200,0,"-","Aksesoris Pintu","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 20.000","Rp 10.000"],
+["ORD_0004134",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. PONTIANAK","KALIMANTAN BARAT",2400,"Rp 30.000","Rp 33.696","Rp 32.400"],
+["ORD_0004135",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PALANGKA RAYA","KALIMANTAN TENGAH",21300,"Rp 15.000","Rp 38.752","Rp 36.300"],
+["ORD_0004136",1,1200,0,"-","Peralatan Makan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. KARAWANG","JAWA BARAT",0,"Rp 10.000","Rp 28.969","Rp 10.000"],
+["ORD_0004137",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 8.000","Rp 21.592","Rp 8.000"],
+["ORD_0004138",2,2000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. WONOSOBO","JAWA TENGAH",0,"Rp 17.000","Rp 42.496","Rp 17.000"],
+["ORD_0004139",2,1000,0,"-","Seal / Baut / Roof","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 115.000","Rp 8.000"],
+["ORD_0004140",1,100,0,"-","Piring","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BATANG","JAWA TENGAH",6000,"Rp 10.000","Rp 17.120","Rp 16.000"],
+["ORD_0004141",2,2000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA JAKARTA PUSAT","DKI JAKARTA",0,"Rp 10.000","Rp 36.152","Rp 10.000"],
+["ORD_0004142",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KOTA DEPOK","JAWA BARAT",0,"Rp 8.000","Rp 40.996","Rp 8.000"],
+["ORD_0004143",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. CILACAP","JAWA TENGAH",0,"Rp 16.000","Rp 16.600","Rp 16.000"],
+["ORD_0004144",3,1500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. TANGERANG","BANTEN",0,"Rp 14.400","Rp 62.776","Rp 14.400"],
+["ORD_0004145",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. KLATEN","JAWA TENGAH",0,"Rp 17.000","Rp 17.120","Rp 17.000"],
+["ORD_0004146",2,1000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA SUNGAIPENUH","JAMBI",0,"Rp 38.000","Rp 41.600","Rp 38.000"],
+["ORD_0004147",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 21.592","Rp 8.000"],
+["ORD_0004148",3,1500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA DENPASAR","BALI",6000,"Rp 40.000","Rp 67.400","Rp 46.000"],
+["ORD_0004149",1,200,0,"-","Other","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 18.000","Rp 8.000"],
+["ORD_0004150",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 9.864","Rp 8.000"],
+["ORD_0004151",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. TANGERANG","BANTEN",0,"Rp 8.000","Rp 21.800","Rp 8.000"],
+["ORD_0004152",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","SPX Hemat","COD (Bayar di Tempat)","KAB. DELI SERDANG","SUMATERA UTARA",4200,"Rp 20.000","Rp 21.488","Rp 24.200"],
+["ORD_0004153",1,300,0,"-","Peralatan Kamar Mandi","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. PEMALANG","JAWA TENGAH",0,"Rp 17.000","Rp 19.000","Rp 17.000"],
+["ORD_0004154",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. SIAK","RIAU",11500,"Rp 25.000","Rp 53.100","Rp 36.500"],
+["ORD_0004155",1,80,0,"-","Aksesoris Pintu","Selesai","","SPX Hemat","COD (Bayar di Tempat)","KAB. PURWAKARTA","JAWA BARAT",0,"Rp 8.000","Rp 6.200","Rp 8.000"],
+["ORD_0004156",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA TASIKMALAYA","JAWA BARAT",0,"Rp 15.000","Rp 21.592","Rp 15.000"],
+["ORD_0004157",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA TANGERANG","BANTEN",0,"Rp 9.500","Rp 16.600","Rp 9.500"],
+["ORD_0004158",1,250,0,"-","Lunch Box / Rantang","Selesai","","Hemat Kargo-SPX Hemat","SeaBank Bayar Instan","KAB. CILACAP","JAWA TENGAH",0,"Rp 16.000","Rp 14.500","Rp 16.000"],
+["ORD_0004159",4,3600,0,"-","Keranjang, Mangkok Sambal / Saus, Peralatan Makan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA MEDAN","SUMATERA UTARA",3000,"Rp 20.000","Rp 50.088","Rp 23.000"],
+["ORD_0004160",3,320,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","SeaBank Bayar Instan","KOTA JAKARTA UTARA","DKI JAKARTA",8000,"-","Rp 26.278","Rp 8.000"],
+["ORD_0004161",1,100,0,"-","Saringan / Strainer","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA BANDUNG","JAWA BARAT",0,"Rp 13.000","Rp 16.120","Rp 13.000"],
+["ORD_0004162",4,2000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA MEDAN","SUMATERA UTARA",6000,"Rp 40.000","Rp 87.200","Rp 46.000"],
+["ORD_0004163",2,400,0,"-","Aksesoris Pintu, Plastik / Wadah Plastik","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BANDUNG","JAWA BARAT",0,"Rp 11.000","Rp 12.960","Rp 11.000"],
+["ORD_0004164",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 21.592","Rp 8.000"],
+["ORD_0004165",1,5000,0,"-","Nampan / Tray","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANDUNG","JAWA BARAT",28300,"Rp 20.000","Rp 134.016","Rp 48.300"],
+["ORD_0004166",2,1000,0,"-","Celengan","Selesai","","Same Day-SPX Sameday","Online Payment","KOTA TANGERANG","BANTEN",22500,"-","Rp 58.955","Rp 22.500"],
+["ORD_0004167",1,300,0,"-","Pisau / Alat Potong","Selesai","","J&T Express","Online Payment","KOTA SURABAYA","JAWA TIMUR",12600,"-","Rp 72.600","Rp 12.600"],
+["ORD_0004168",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 8.000","Rp 20.998","Rp 8.000"],
+["ORD_0004169",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA JAKARTA BARAT","DKI JAKARTA",8000,"-","Rp 26.900","Rp 8.000"],
+["ORD_0004170",1,300,0,"-","Keranjang","Selesai","","Reguler (Cashless)-JNE Reguler","Online Payment","KAB. SEMARANG","JAWA TENGAH",0,"Rp 17.000","Rp 12.000","Rp 17.000"],
+["ORD_0004171",4,800,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KETAPANG","KALIMANTAN BARAT",8500,"Rp 25.000","Rp 71.500","Rp 33.500"],
+["ORD_0004172",3,2250,0,"-","Baskom / Mangkok Besar","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KARAWANG","JAWA BARAT",0,"Rp 12.500","Rp 60.280","Rp 12.500"],
+["ORD_0004173",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Reguler (Cashless)-SPX Standard","SeaBank Bayar Instan","KAB. JEPARA","JAWA TENGAH",0,"-","-","Rp 17.000"],
+["ORD_0004174",5,1000,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. INDRAMAYU","JAWA BARAT",0,"Rp 14.000","Rp 78.480","Rp 14.000"],
+["ORD_0004175",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 8.000","Rp 21.800","Rp 8.000"],
+["ORD_0004176",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KOTA BEKASI","JAWA BARAT",8000,"-","Rp 29.078","Rp 8.000"],
+["ORD_0004177",3,1980,0,"-","Baskom / Mangkok Besar","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. GARUT","JAWA BARAT",0,"Rp 14.000","Rp 29.080","Rp 14.000"],
+["ORD_0004178",1,2200,0,"-","Baskom / Mangkok Besar","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. KARAWANG","JAWA BARAT",0,"Rp 11.000","Rp 15.040","Rp 11.000"],
+["ORD_0004179",1,1000,0,"-","Tempat Nasi","Selesai","","Agen SPX Express","COD (Bayar di Tempat)","KAB. LANGKAT","SUMATERA UTARA",7500,"Rp 20.000","Rp 29.600","Rp 27.500"],
+["ORD_0004180",1,1200,0,"-","Lunch Box / Rantang","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KAB. BANGKALAN","JAWA TIMUR",0,"Rp 17.000","Rp 86.850","Rp 17.000"],
+["ORD_0004181",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA CILEGON","BANTEN",0,"Rp 10.000","Rp 18.680","Rp 10.000"],
+["ORD_0004182",1,300,0,"-","Pisau / Alat Potong","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","Indomaret/i.Saku","KAB. KARAWANG","JAWA BARAT",0,"-","-","Rp 10.000"],
+["ORD_0004183",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KAB. KARAWANG","JAWA BARAT",0,"Rp 11.000","Rp 17.500","Rp 11.000"],
+["ORD_0004184",1,3000,0,"-","Other","Selesai","","Instant (Versi Lama)-SPX Instant (Versi Lama)","Saldo ShopeePay","KOTA TANGERANG","BANTEN",16000,"Rp 15.000","Rp 68.500","Rp 31.000"],
+["ORD_0004185",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 8.000","Rp 7.841","Rp 8.000"],
+["ORD_0004186",1,80,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BANDUNG BARAT","JAWA BARAT",2500,"Rp 10.000","Rp 10.000","Rp 12.500"],
+["ORD_0004187",3,3780,0,"-","Aksesoris Pintu, Baskom / Mangkok Besar","Selesai","","SPX Hemat","COD (Bayar di Tempat)","KAB. OGAN KOMERING ILIR","SUMATERA SELATAN",0,"Rp 14.400","Rp 33.240","Rp 14.400"],
+["ORD_0004188",1,200,0,"-","Other","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KARAWANG","JAWA BARAT",0,"Rp 10.000","Rp 10.256","Rp 10.000"],
+["ORD_0004189",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"Rp 9.500","Rp 19.543","Rp 9.500"],
+["ORD_0004190",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BENGKALIS","RIAU",0,"Rp 37.500","Rp 15.423","Rp 37.500"],
+["ORD_0004191",2,1100,0,"-","Mangkok Sambal / Saus, Talenan","Selesai","","Reguler (Cashless)-JNE Reguler","Saldo ShopeePay","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 10.000","Rp 34.000","Rp 10.000"],
+["ORD_0004192",1,1200,0,"-","Peralatan Makan","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pengiriman gagal","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. PACITAN","JAWA TIMUR",0,"-","-","Rp 17.000"],
+["ORD_0004193",2,2000,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Perlu mengubah alamat pengiriman","Reguler (Cashless)","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"-","-","Rp 10.000"],
+["ORD_0004194",2,2000,0,"-","Celengan","Selesai","","Reguler (Cashless)-JNE Reguler","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 44.800","Rp 10.000"],
+["ORD_0004195",2,200,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA TANGERANG","BANTEN",0,"Rp 8.000","Rp 18.478","Rp 8.000"],
+["ORD_0004196",5,1000,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. TANAH BUMBU","KALIMANTAN SELATAN",0,"Rp 35.000","Rp 80.500","Rp 35.000"],
+["ORD_0004197",1,500,0,"-","Celengan","Selesai","","J&T Express","COD (Bayar di Tempat)","KAB. TEGAL","JAWA TENGAH",0,"Rp 13.300","Rp 18.576","Rp 13.300"],
+["ORD_0004198",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. TULUNGAGUNG","JAWA TIMUR",0,"-","-","Rp 16.000"],
+["ORD_0004199",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. TANGERANG","BANTEN",0,"Rp 9.500","Rp 21.592","Rp 9.500"],
+["ORD_0004200",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 17.120","Rp 8.000"],
+["ORD_0004201",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","SeaBank Bayar Instan","KAB. BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 15.905","Rp 8.000"],
+["ORD_0004202",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA DEPOK","JAWA BARAT",0,"Rp 9.500","Rp 21.592","Rp 9.500"],
+["ORD_0004203",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 18.502","Rp 10.000"],
+["ORD_0004204",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PALEMBANG","SUMATERA SELATAN",0,"Rp 17.000","Rp 32.200","Rp 17.000"],
+["ORD_0004205",8,2800,2,"-","Mangkok Sambal / Saus, Other","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KAB. SEMARANG","JAWA TENGAH",0,"Rp 28.800","Rp 91.273","Rp 28.800"],
+["ORD_0004206",7,1560,0,"-","Aksesoris Pintu, Other","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA BANDUNG","JAWA BARAT",0,"Rp 13.000","Rp 61.446","Rp 13.000"],
+["ORD_0004207",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PADANG","SUMATERA BARAT",1000,"Rp 20.000","Rp 17.160","Rp 21.000"],
+["ORD_0004208",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA PALEMBANG","SUMATERA SELATAN",2000,"Rp 15.000","Rp 20.900","Rp 17.000"],
+["ORD_0004209",1,1000,0,"-","Teko / Jug","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pengiriman gagal","Agen SPX Express","Saldo ShopeePay","KAB. TANAH LAUT","KALIMANTAN SELATAN",0,"-","-","Rp 27.500"],
+["ORD_0004210",1,200,0,"-","Peralatan Makan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PAREPARE","SULAWESI SELATAN",7500,"Rp 25.000","Rp 40.000","Rp 32.500"],
+["ORD_0004211",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 18.576","Rp 8.000"],
+["ORD_0004212",2,1000,0,"-","Celengan","Selesai","","Reguler (Cashless)-JNE Reguler","Saldo ShopeePay","KAB. JOMBANG","JAWA TIMUR",0,"Rp 17.000","Rp 41.600","Rp 17.000"],
+["ORD_0004213",1,1000,0,"-","Tempat Nasi","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. PROBOLINGGO","JAWA TIMUR",0,"-","-","Rp 16.000"],
+["ORD_0004214",1,4000,0,"-","Seal / Baut / Roof","Selesai","","Kargo-JNE Trucking (JTR)","Online Payment","KAB. INDRAMAYU","JAWA BARAT",20000,"-","Rp 365.209","Rp 20.000"],
+["ORD_0004215",5,1500,0,"-","Nampan / Tray","Selesai","","Same Day-SPX Sameday","Online Payment","KAB. TANGERANG","BANTEN",25000,"-","Rp 77.000","Rp 25.000"],
+["ORD_0004216",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","SPX Hemat","Saldo ShopeePay","KOTA SOLOK","SUMATERA BARAT",100,"Rp 20.000","Rp 33.100","Rp 20.100"],
+["ORD_0004217",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 20.306","Rp 8.000"],
+["ORD_0004218",1,12000,0,"-","Seal / Baut / Roof","Selesai","","Kargo-JNE Trucking (JTR)","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"Rp 29.000","Rp 1.290.000","Rp 29.000"],
+["ORD_0004219",2,1000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA TANGERANG","BANTEN",0,"Rp 10.000","Rp 35.800","Rp 10.000"],
+["ORD_0004220",1,500,0,"-","Celengan","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","SeaBank Bayar Instan","KOTA MEDAN","SUMATERA UTARA",0,"-","-","Rp 23.000"],
+["ORD_0004221",4,800,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. SUBANG","JAWA BARAT",0,"Rp 17.000","Rp 53.000","Rp 17.000"],
+["ORD_0004222",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. BANDUNG","JAWA BARAT",0,"Rp 10.500","Rp 21.800","Rp 10.500"],
+["ORD_0004223",6,4500,0,"-","Baskom / Mangkok Besar","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SIDENRENG RAPPANG/RAPANG","SULAWESI SELATAN",25000,"Rp 40.000","Rp 143.251","Rp 65.000"],
+["ORD_0004224",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",0,"Rp 9.500","Rp 21.800","Rp 9.500"],
+["ORD_0004225",1,1200,0,"-","Peralatan Makan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. GARUT","JAWA BARAT",0,"Rp 17.000","Rp 32.200","Rp 17.000"],
+["ORD_0004226",5,3000,0,"-","Mangkok Sambal / Saus, Pisau / Alat Potong","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. MUSI RAWAS UTARA","SUMATERA SELATAN",10300,"Rp 25.000","Rp 91.584","Rp 35.300"],
+["ORD_0004227",12,3330,0,"-","Aksesoris Pintu, Perlengkapan Packing","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA CIMAHI","JAWA BARAT",0,"Rp 13.000","Rp 90.542","Rp 13.000"],
+["ORD_0004228",3,600,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA BATAM","KEPULAUAN RIAU",8000,"Rp 25.000","Rp 53.000","Rp 33.000"],
+["ORD_0004229",1,1200,0,"-","Peralatan Makan","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SUMBA TIMUR","NUSA TENGGARA TIMUR (NTT)",0,"-","-","Rp 68.500"],
+["ORD_0004230",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAKARTA PUSAT","DKI JAKARTA",0,"Rp 8.000","Rp 22.000","Rp 8.000"],
+["ORD_0004231",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",0,"Rp 9.500","Rp 21.800","Rp 9.500"],
+["ORD_0004232",2,1000,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA LANGSA","NANGGROE ACEH DARUSSALAM (NAD)",0,"-","-","Rp 35.400"],
+["ORD_0004233",2,2000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 10.000","Rp 35.980","Rp 10.000"],
+["ORD_0004234",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA SELATAN","DKI JAKARTA",8000,"-","Rp 29.912","Rp 8.000"],
+["ORD_0004235",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. INDRAMAYU","JAWA BARAT",0,"Rp 17.000","Rp 19.000","Rp 17.000"],
+["ORD_0004236",2,1500,0,"-","Baskom / Mangkok Besar","Selesai","","Hemat Kargo-SPX Hemat","SPayLater","KOTA TANGERANG","BANTEN",0,"Rp 8.000","Rp 39.380","Rp 8.000"],
+["ORD_0004237",1,2000,0,"-","Bangku / Kursi Kecil","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BLITAR","JAWA TIMUR",0,"Rp 20.000","Rp 15.000","Rp 20.000"],
+["ORD_0004238",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-JNE Reguler","Online Payment","KOTA DEPOK","JAWA BARAT",0,"Rp 9.500","Rp 20.814","Rp 9.500"],
+["ORD_0004239",5,25000,0,"-","Tempat Nasi","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Kargo","Indomaret/i.Saku","KOTA SERANG","BANTEN",0,"-","-","Rp 52.500"],
+["ORD_0004240",1,1000,0,"-","Teko / Jug","Selesai","","Same Day-SPX Sameday","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"Rp 17.500","Rp 115.572","Rp 17.500"],
+["ORD_0004241",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 17.394","Rp 8.000"],
+["ORD_0004242",1,400,0,"-","Pengolah Bumbu / Sayur","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PEKANBARU","RIAU",0,"Rp 21.000","Rp 43.640","Rp 21.000"],
+["ORD_0004243",5,1000,0,"-","Mangkok Sambal / Saus","Selesai","","Instant (Versi Lama)-SPX Instant (Versi Lama)","Online Payment","KOTA TANGERANG","BANTEN",5000,"Rp 15.000","Rp 74.334","Rp 20.000"],
+["ORD_0004244",1,2000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",1000,"Rp 15.000","Rp 14.416","Rp 16.000"],
+["ORD_0004245",2,2000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA TANGERANG SELATAN","BANTEN",0,"Rp 10.000","Rp 33.791","Rp 10.000"],
+["ORD_0004246",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA BANDUNG","JAWA BARAT",0,"Rp 10.000","Rp 41.580","Rp 10.000"],
+["ORD_0004247",1,750,0,"-","Baskom / Mangkok Besar","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PEMATANG SIANTAR","SUMATERA UTARA",0,"-","-","Rp 36.300"],
+["ORD_0004248",1,1400,0,"-","Plastik / Wadah Plastik","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. MANDAILING NATAL","SUMATERA UTARA",29000,"Rp 40.000","Rp 88.360","Rp 69.000"],
+["ORD_0004249",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 8.000","Rp 17.120","Rp 8.000"],
+["ORD_0004250",8,25200,0,"-","Bangku / Kursi Kecil, Keranjang, Lunch Box / Rantang, Other, Peralatan Makan, Plastik / Wadah Plastik, Sikat / Pembersih","Selesai","","Same Day-SPX Sameday","Online Payment","KOTA TANGERANG","BANTEN",0,"Rp 16.500","Rp 172.500","Rp 16.500"],
+["ORD_0004251",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Need to change delivery address","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAKARTA UTARA","DKI JAKARTA",0,"-","-","Rp 8.000"],
+["ORD_0004252",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KOTA JAKARTA TIMUR","DKI JAKARTA",10000,"-","Rp 25.831","Rp 10.000"],
+["ORD_0004253",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 41.600","Rp 8.000"],
+["ORD_0004254",1,500,0,"-","Baskom / Mangkok Besar","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KARAWANG","JAWA BARAT",0,"Rp 10.000","Rp 11.920","Rp 10.000"],
+["ORD_0004255",4,1220,0,"-","Mangkok Sambal / Saus, Perlengkapan Packing","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA TARAKAN","KALIMANTAN UTARA",14300,"Rp 20.000","Rp 66.300","Rp 34.300"],
+["ORD_0004256",2,2000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",0,"Rp 16.000","Rp 34.000","Rp 16.000"],
+["ORD_0004257",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA BANJAR","JAWA BARAT",0,"Rp 16.000","Rp 33.240","Rp 16.000"],
+["ORD_0004258",1,100,0,"-","Saringan / Strainer","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA SURAKARTA (SOLO)","JAWA TENGAH",0,"Rp 14.500","Rp 17.120","Rp 14.500"],
+["ORD_0004259",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 10.000","Rp 20.572","Rp 10.000"],
+["ORD_0004260",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","SPX Hemat","SPayLater","KAB. PRINGSEWU","LAMPUNG",0,"Rp 12.500","Rp 30.790","Rp 12.500"],
+["ORD_0004261",4,400,0,"-","Stempel / Alat Kantor","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. MALANG","JAWA TIMUR",0,"Rp 17.000","Rp 119.560","Rp 17.000"],
+["ORD_0004262",2,800,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. TANGERANG","BANTEN",0,"Rp 8.000","Rp 32.200","Rp 8.000"],
+["ORD_0004263",1,100,0,"-","Aksesoris Pintu","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA TANGERANG SELATAN","BANTEN",0,"Rp 9.500","Rp 10.500","Rp 9.500"],
+["ORD_0004264",3,1500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA MEDAN","SUMATERA UTARA",26000,"Rp 20.000","Rp 75.687","Rp 46.000"],
+["ORD_0004265",1,300,0,"-","Lunch Box / Rantang","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANDUNG","JAWA BARAT",0,"Rp 9.000","Rp 15.040","Rp 9.000"],
+["ORD_0004266",1,1200,0,"-","Peralatan Makan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA PALEMBANG","SUMATERA SELATAN",0,"Rp 25.000","Rp 32.000","Rp 25.000"],
+["ORD_0004267",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANJAR","KALIMANTAN SELATAN",0,"-","-","Rp 31.500"],
+["ORD_0004268",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANJAR","KALIMANTAN SELATAN",1500,"Rp 30.000","Rp 23.152","Rp 31.500"],
+["ORD_0004269",4,800,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BATANG","JAWA TENGAH",0,"Rp 16.000","Rp 57.658","Rp 16.000"],
+["ORD_0004270",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","Kartu Kredit/Debit","KOTA SURABAYA","JAWA TIMUR",0,"Rp 17.000","Rp 16.000","Rp 17.000"],
+["ORD_0004271",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. LEBAK","BANTEN",3000,"Rp 10.000","Rp 19.720","Rp 13.000"],
+["ORD_0004272",2,800,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. GARUT","JAWA BARAT",0,"Rp 15.500","Rp 33.240","Rp 15.500"],
+["ORD_0004273",2,2200,0,"-","Celengan, Gantungan Baju / Hanger","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA DENPASAR","BALI",3000,"Rp 20.000","Rp 36.800","Rp 23.000"],
+["ORD_0004274",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA TANGERANG","BANTEN",0,"Rp 9.500","Rp 19.720","Rp 9.500"],
+["ORD_0004275",5,5000,0,"-","Plastik / Wadah Plastik","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. BANDUNG","JAWA BARAT",5000,"Rp 40.000","Rp 210.700","Rp 45.000"],
+["ORD_0004276",1,1000,0,"-","Tempat Nasi","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. INDRAMAYU","JAWA BARAT",0,"-","-","Rp 15.000"],
+["ORD_0004277",2,1000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA BEKASI","JAWA BARAT",0,"Rp 10.000","Rp 42.184","Rp 10.000"],
+["ORD_0004278",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. TEGAL","JAWA TENGAH",0,"Rp 17.000","Rp 33.240","Rp 17.000"],
+["ORD_0004279",2,800,0,"-","Botol / Gelas / Mug","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. NGANJUK","JAWA TIMUR",0,"Rp 17.000","Rp 17.000","Rp 17.000"],
+["ORD_0004280",1,1000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PALEMBANG","SUMATERA SELATAN",7000,"Rp 10.000","Rp 28.560","Rp 17.000"],
+["ORD_0004281",1,4000,0,"-","Seal / Baut / Roof","Selesai","","Kargo-JNE Trucking (JTR)","Online Payment","KAB. CIANJUR","JAWA BARAT",0,"Rp 20.000","Rp 346.314","Rp 20.000"],
+["ORD_0004282",1,1000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. PURBALINGGA","JAWA TENGAH",6000,"Rp 10.000","Rp 28.560","Rp 16.000"],
+["ORD_0004283",1,4000,0,"-","Seal / Baut / Roof","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. TANGERANG","BANTEN",0,"Rp 27.200","Rp 356.000","Rp 27.200"],
+["ORD_0004284",2,2000,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA TANGERANG","BANTEN",0,"Rp 10.000","Rp 33.900","Rp 10.000"],
+["ORD_0004285",1,4000,0,"-","Seal / Baut / Roof","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KARAWANG","JAWA BARAT",0,"Rp 34.000","Rp 348.000","Rp 34.000"],
+["ORD_0004286",4,800,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA TANGERANG SELATAN","BANTEN",0,"Rp 8.000","Rp 65.480","Rp 8.000"],
+["ORD_0004287",2,6000,0,"-","Baskom / Mangkok Besar","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA SEMARANG","JAWA TENGAH",0,"Rp 17.000","Rp 81.080","Rp 17.000"],
+["ORD_0004288",2,160,0,"-","Aksesoris Pintu","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA JAKARTA UTARA","DKI JAKARTA",0,"Rp 10.000","Rp 12.440","Rp 10.000"],
+["ORD_0004289",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PEKANBARU","RIAU",0,"Rp 21.000","Rp 42.184","Rp 21.000"],
+["ORD_0004290",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. MANDAILING NATAL","SUMATERA UTARA",9500,"Rp 25.000","Rp 42.297","Rp 34.500"],
+["ORD_0004291",1,100,0,"-","Saringan / Strainer","Selesai","","Reguler (Cashless)-SPX Standard","SeaBank Bayar Instan","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 10.000","Rp 16.500","Rp 10.000"],
+["ORD_0004292",2,1000,0,"-","Celengan","Selesai","","Same Day-SPX Sameday","Saldo ShopeePay","KOTA TANGERANG SELATAN","BANTEN",16500,"-","Rp 58.100","Rp 16.500"],
+["ORD_0004293",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA PADANG","SUMATERA BARAT",1000,"Rp 20.000","Rp 22.800","Rp 21.000"],
+["ORD_0004294",2,24000,0,"-","Seal / Baut / Roof","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA DEPOK","JAWA BARAT",115200,"Rp 40.000","Rp 2.692.454","Rp 155.200"],
+["ORD_0004295",2,2000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 8.000","Rp 36.256","Rp 8.000"],
+["ORD_0004296",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 8.000","Rp 35.095","Rp 8.000"],
+["ORD_0004297",1,1000,0,"-","Tempat Nasi","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA TANGERANG SELATAN","BANTEN",0,"Rp 10.000","Rp 21.800","Rp 10.000"],
+["ORD_0004298",1,30,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BANDUNG","JAWA BARAT",0,"Rp 10.000","Rp 7.500","Rp 10.000"],
+["ORD_0004299",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"-","-","Rp 8.000"],
+["ORD_0004300",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 8.000","Rp 16.300","Rp 8.000"],
+["ORD_0004301",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KAB. BOGOR","JAWA BARAT",0,"Rp 9.500","Rp 18.900","Rp 9.500"],
+["ORD_0004302",2,660,0,"-","Baskom / Mangkok Besar, Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"Rp 9.500","Rp 56.000","Rp 9.500"],
+["ORD_0004303",1,300,0,"-","Peralatan Kamar Mandi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PALEMBANG","SUMATERA SELATAN",2000,"Rp 15.000","Rp 20.760","Rp 17.000"],
+["ORD_0004304",1,100,0,"-","Aksesoris Pintu","Selesai","","SPX Hemat","SeaBank Bayar Instan","KAB. PANDEGLANG","BANTEN",5400,"-","Rp 15.400","Rp 5.400"],
+["ORD_0004305",2,200,0,"-","Stempel / Alat Kantor","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA TANGERANG SELATAN","BANTEN",0,"Rp 9.500","Rp 59.760","Rp 9.500"],
+["ORD_0004306",3,750,0,"-","Other","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BONDOWOSO","JAWA TIMUR",0,"Rp 17.000","Rp 15.949","Rp 17.000"],
+["ORD_0004307",1,1000,0,"-","Tempat Nasi","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANJARNEGARA","JAWA TENGAH",0,"-","-","Rp 14.500"],
+["ORD_0004308",1,100,0,"-","Saringan / Strainer","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. TANGERANG","BANTEN",0,"Rp 8.000","Rp 16.516","Rp 8.000"],
+["ORD_0004309",4,1000,0,"-","Lunch Box / Rantang","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KOTA SEMARANG","JAWA TENGAH",0,"-","-","Rp 17.000"],
+["ORD_0004310",5,1000,0,"-","Nampan / Tray","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA BANDA ACEH","NANGGROE ACEH DARUSSALAM (NAD)",4000,"Rp 25.000","Rp 38.960","Rp 29.000"],
+["ORD_0004311",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KAB. PROBOLINGGO","JAWA TIMUR",0,"Rp 17.000","Rp 20.124","Rp 17.000"],
+["ORD_0004312",1,300,0,"-","Peralatan Kamar Mandi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. MOJOKERTO","JAWA TIMUR",16000,"-","Rp 35.219","Rp 16.000"],
+["ORD_0004313",1,400,0,"-","Keranjang","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SUBANG","JAWA BARAT",0,"Rp 14.500","Rp 10.810","Rp 14.500"],
+["ORD_0004314",3,1800,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA BANJARBARU","KALIMANTAN SELATAN",8200,"Rp 25.000","Rp 57.401","Rp 33.200"],
+["ORD_0004315",3,4500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"Rp 18.000","Rp 55.184","Rp 18.000"],
+["ORD_0004316",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SAMBAS","KALIMANTAN BARAT",8500,"Rp 25.000","Rp 51.024","Rp 33.500"],
+["ORD_0004317",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. BOGOR","JAWA BARAT",8000,"-","Rp 17.960","Rp 8.000"],
+["ORD_0004318",1,6000,0,"-","Keranjang","Selesai","","Kargo-JNE Trucking (JTR)","Online Payment","KOTA JAKARTA PUSAT","DKI JAKARTA",17000,"-","Rp 40.444","Rp 17.000"],
+["ORD_0004319",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. MAGELANG","JAWA TENGAH",4500,"Rp 10.000","Rp 15.500","Rp 14.500"],
+["ORD_0004320",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. SUBANG","JAWA BARAT",0,"Rp 17.000","Rp 21.592","Rp 17.000"],
+["ORD_0004321",1,200,0,"-","Peralatan Makan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PAREPARE","SULAWESI SELATAN",12500,"Rp 20.000","Rp 45.200","Rp 32.500"],
+["ORD_0004322",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. TASIKMALAYA","JAWA BARAT",0,"Rp 17.000","Rp 21.592","Rp 17.000"],
+["ORD_0004323",2,800,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA CILEGON","BANTEN",0,"Rp 7.500","Rp 31.533","Rp 7.500"],
+["ORD_0004324",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-JNE Reguler","Online Payment","KOTA TANGERANG","BANTEN",0,"Rp 9.500","Rp 18.900","Rp 9.500"],
+["ORD_0004325",1,200,0,"-","Pengolah Bumbu / Sayur","Selesai","","Reguler (Cashless)-JNE Reguler","Saldo ShopeePay","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 42.000","Rp 10.000"],
+["ORD_0004326",1,400,0,"-","Pengolah Bumbu / Sayur","Batal","Dibatalkan oleh Pembeli. Alasan: Need to change delivery address","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PEKANBARU","RIAU",0,"-","-","Rp 21.000"],
+["ORD_0004327",2,800,0,"-","Pengolah Bumbu / Sayur","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PEKANBARU","RIAU",0,"Rp 21.000","Rp 86.280","Rp 21.000"],
+["ORD_0004328",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. MAGELANG","JAWA TENGAH",4500,"Rp 10.000","Rp 15.040","Rp 14.500"],
+["ORD_0004329",1,100,0,"-","Saringan / Strainer","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA DEPOK","JAWA BARAT",0,"Rp 8.000","Rp 17.120","Rp 8.000"],
+["ORD_0004330",1,1000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SIDOARJO","JAWA TIMUR",0,"Rp 14.500","Rp 13.520","Rp 14.500"],
+["ORD_0004331",1,1000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. PANDEGLANG","BANTEN",0,"Rp 13.000","Rp 21.800","Rp 13.000"],
+["ORD_0004332",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",0,"Rp 9.500","Rp 33.240","Rp 9.500"],
+["ORD_0004333",1,100,0,"-","Aksesoris Pintu","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"-","-","Rp 8.000"],
+["ORD_0004334",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA PALEMBANG","SUMATERA SELATAN",0,"Rp 17.000","Rp 32.200","Rp 17.000"],
+["ORD_0004335",1,200,0,"-","Plastik / Wadah Plastik","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 8.000","Rp 18.481","Rp 8.000"],
+["ORD_0004336",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. SUKABUMI","JAWA BARAT",0,"Rp 18.000","Rp 9.900","Rp 18.000"],
+["ORD_0004337",2,160,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KUTAI BARAT","KALIMANTAN TIMUR",19400,"Rp 30.000","Rp 31.576","Rp 49.400"],
+["ORD_0004338",1,300,0,"-","Peralatan Kamar Mandi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. LAMPUNG TENGAH","LAMPUNG",13200,"Rp 20.000","Rp 32.408","Rp 33.200"],
+["ORD_0004339",1,1000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. KENDAL","JAWA TENGAH",0,"Rp 16.000","Rp 22.500","Rp 16.000"],
+["ORD_0004340",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA TANGERANG","BANTEN",0,"Rp 8.000","Rp 11.500","Rp 8.000"],
+["ORD_0004341",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"-","-","Rp 8.000"],
+["ORD_0004342",2,1000,1,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. TANGERANG","BANTEN",0,"Rp 8.000","Rp 21.300","Rp 8.000"],
+["ORD_0004343",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KAB. BANDUNG","JAWA BARAT",0,"Rp 14.000","Rp 21.800","Rp 14.000"],
+["ORD_0004344",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 10.000","Rp 16.407","Rp 10.000"],
+["ORD_0004345",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA JAKARTA UTARA","DKI JAKARTA",0,"Rp 10.000","Rp 17.120","Rp 10.000"],
+["ORD_0004346",4,400,0,"-","Stempel / Alat Kantor","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. MALANG","JAWA TIMUR",0,"Rp 16.000","Rp 112.384","Rp 16.000"],
+["ORD_0004347",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 8.000","Rp 18.576","Rp 8.000"],
+["ORD_0004348",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANYUWANGI","JAWA TIMUR",1000,"Rp 15.000","Rp 18.160","Rp 16.000"],
+["ORD_0004349",2,200,0,"-","Aksesoris Pintu","Selesai","","Instant (Versi Lama)-SPX Instant (Versi Lama)","Saldo ShopeePay","KOTA TANGERANG","BANTEN",18000,"-","Rp 37.500","Rp 18.000"],
+["ORD_0004350",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 10.000","Rp 21.592","Rp 10.000"],
+["ORD_0004351",1,2200,0,"-","Baskom / Mangkok Besar","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA DEPOK","JAWA BARAT",0,"-","-","Rp 14.400"],
+["ORD_0004352",3,3000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 14.400","Rp 61.800","Rp 14.400"],
+["ORD_0004353",1,1000,0,"-","Tempat Nasi","Batal","Dibatalkan oleh Pembeli. Alasan: Perlu mengubah alamat pengiriman","Reguler (Cashless)","Online Payment","KAB. BANGKALAN","JAWA TIMUR",0,"-","-","Rp 17.000"],
+["ORD_0004354",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 10.000","Rp 17.120","Rp 10.000"],
+["ORD_0004355",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. KARAWANG","JAWA BARAT",0,"Rp 11.000","Rp 21.592","Rp 11.000"],
+["ORD_0004356",2,1000,0,"-","Gantungan Baju / Hanger","Selesai","","Reguler (Cashless)-SPX Standard","SeaBank Bayar Instan","KOTA DEPOK","JAWA BARAT",0,"Rp 10.000","Rp 61.000","Rp 10.000"],
+["ORD_0004357",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA SERANG","BANTEN",0,"Rp 10.000","Rp 18.576","Rp 10.000"],
+["ORD_0004358",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. SUMENEP","JAWA TIMUR",0,"Rp 17.000","Rp 17.120","Rp 17.000"],
+["ORD_0004359",1,300,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 8.000","Rp 16.600","Rp 8.000"],
+["ORD_0004360",1,600,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BEKASI","JAWA BARAT",0,"Rp 8.000","Rp 11.400","Rp 8.000"],
+["ORD_0004361",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 19.000","Rp 8.000"],
+["ORD_0004362",2,900,0,"-","Mangkok Sambal / Saus, Other","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","Online Payment","KAB. LEBAK","BANTEN",0,"-","-","Rp 13.000"],
+["ORD_0004363",1,1000,0,"-","Tempat Nasi","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"-","-","Rp 10.000"],
+["ORD_0004364",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA TANGERANG","BANTEN",0,"Rp 8.000","Rp 6.900","Rp 8.000"],
+["ORD_0004365",1,400,0,"-","Keranjang","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. LEBAK","BANTEN",0,"Rp 13.000","Rp 11.400","Rp 13.000"],
+["ORD_0004366",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. TEGAL","JAWA TENGAH",0,"Rp 16.500","Rp 16.600","Rp 16.500"],
+["ORD_0004367",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. TANJUNG JABUNG TIMUR","JAMBI",0,"Rp 20.000","Rp 31.000","Rp 20.000"],
+["ORD_0004368",1,300,0,"-","Keranjang","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA CIMAHI","JAWA BARAT",0,"Rp 9.000","Rp 12.336","Rp 9.000"],
+["ORD_0004369",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KOTA CIMAHI","JAWA BARAT",0,"Rp 13.000","Rp 16.150","Rp 13.000"],
+["ORD_0004370",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA BANDUNG","JAWA BARAT",0,"Rp 10.000","Rp 18.900","Rp 10.000"],
+["ORD_0004371",3,9900,0,"-","Baskom / Mangkok Besar, Nampan / Tray","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. PASURUAN","JAWA TIMUR",21600,"Rp 20.000","Rp 81.704","Rp 41.600"],
+["ORD_0004372",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KAB. BANDUNG","JAWA BARAT",0,"Rp 14.000","Rp 18.069","Rp 14.000"],
+["ORD_0004373",1,4000,0,"-","Seal / Baut / Roof","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. KARANGANYAR","JAWA TENGAH",0,"Rp 54.400","Rp 348.500","Rp 54.400"],
+["ORD_0004374",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA TANGERANG","BANTEN",0,"Rp 9.500","Rp 18.900","Rp 9.500"],
+["ORD_0004375",5,5350,0,"-","Aksesoris Mandi, Baskom / Mangkok Besar, Botol / Gelas / Mug, Celengan, Plastik / Wadah Plastik","Selesai","","Hemat Kargo-SPX Hemat","SeaBank Bayar Instan","KOTA BANDUNG","JAWA BARAT",0,"Rp 12.000","Rp 38.900","Rp 12.000"],
+["ORD_0004376",3,1230,0,"-","Mangkok Sambal / Saus, Perlengkapan Packing","Selesai","","JNE Reguler","Saldo ShopeePay","KOTA BANDUNG","JAWA BARAT",0,"Rp 12.000","Rp 25.826","Rp 12.000"],
+["ORD_0004377",1,200,0,"-","Mangkok Sambal / Saus","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KOTA MADIUN","JAWA TIMUR",0,"-","-","Rp 17.000"],
+["ORD_0004378",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA JAKARTA TIMUR","DKI JAKARTA",0,"Rp 8.000","Rp 15.763","Rp 8.000"],
+["ORD_0004379",1,25,0,"-","Aksesoris ID Card","Selesai","","Reguler (Cashless)-JNE Reguler","Pembayaran dibebaskan","KAB. BEKASI","JAWA BARAT",0,"Rp 9.500","-","Rp 9.500"],
+["ORD_0004380",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA TANGERANG SELATAN","BANTEN",0,"Rp 9.500","Rp 20.456","Rp 9.500"],
+["ORD_0004381",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA TANGERANG SELATAN","BANTEN",0,"Rp 8.000","Rp 18.900","Rp 8.000"],
+["ORD_0004382",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",8000,"-","Rp 18.500","Rp 8.000"],
+["ORD_0004383",7,1400,0,"-","Mangkok Sambal / Saus","Selesai","","Same Day-SPX Sameday","Kartu Kredit/Debit","KOTA JAKARTA SELATAN","DKI JAKARTA",25000,"-","Rp 131.000","Rp 25.000"],
+["ORD_0004384",1,400,0,"-","Keranjang","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","SPayLater","KAB. TANGERANG","BANTEN",0,"-","-","Rp 8.000"],
+["ORD_0004385",1,1000,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SUKABUMI","JAWA BARAT",0,"Rp 13.000","Rp 21.280","Rp 13.000"],
+["ORD_0004386",1,500,0,"-","Celengan","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. WAJO","SULAWESI SELATAN",0,"-","-","Rp 32.000"],
+["ORD_0004387",3,4500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. BOGOR","JAWA BARAT",0,"Rp 18.000","Rp 56.270","Rp 18.000"],
+["ORD_0004388",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","SeaBank Bayar Instan","KOTA BANDAR LAMPUNG","LAMPUNG",0,"Rp 16.000","Rp 20.800","Rp 16.000"],
+["ORD_0004389",1,5000,0,"-","Seal / Baut / Roof","Selesai","","Kargo-JNE Trucking (JTR)","Online Payment","KAB. CIANJUR","JAWA BARAT",0,"Rp 20.000","Rp 587.000","Rp 20.000"],
+["ORD_0004390",1,600,0,"-","Tempat Nasi","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",8000,"-","Rp 19.720","Rp 8.000"],
+["ORD_0004391",2,160,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. SERANG","BANTEN",13000,"-","Rp 25.960","Rp 13.000"],
+["ORD_0004392",50,17500,0,"-","Nampan / Tray","Selesai","","Instant (Versi Lama)-SPX Instant (Versi Lama)","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",45000,"Rp 50.000","Rp 339.500","Rp 95.000"],
+["ORD_0004393",1,500,0,"-","Celengan","Selesai","","Reguler (Cashless)-SPX Standard","SeaBank Bayar Instan","KAB. BOGOR","JAWA BARAT",0,"Rp 9.500","Rp 20.800","Rp 9.500"],
+["ORD_0004394",2,1400,0,"-","Botol / Gelas / Mug, Celengan","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 26.007","Rp 8.000"],
+["ORD_0004395",2,200,0,"-","Aksesoris Pintu","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","Saldo ShopeePay","KOTA PEKANBARU","RIAU",0,"-","-","Rp 21.000"],
+["ORD_0004396",1,100,0,"-","Aksesoris Pintu","Batal","Dibatalkan oleh Pembeli. Alasan: Lainnya/ berubah pikiran","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BANDUNG BARAT","JAWA BARAT",0,"-","-","Rp 12.000"],
+["ORD_0004397",2,400,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KAB. BANDUNG BARAT","JAWA BARAT",0,"Rp 12.000","Rp 19.000","Rp 12.000"],
+["ORD_0004398",2,160,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAKARTA PUSAT","DKI JAKARTA",0,"Rp 8.000","Rp 13.000","Rp 8.000"],
+["ORD_0004399",1,30,0,"-","Aksesoris Pintu","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA BARAT","DKI JAKARTA",0,"Rp 10.000","Rp 4.792","Rp 10.000"],
+["ORD_0004400",5,1500,0,"-","Mangkok Sambal / Saus","Batal","Dibatalkan secara otomatis oleh sistem. Alasan: Pesanan belum dibayar","Hemat Kargo","Online Payment","KAB. TANAH BUMBU","KALIMANTAN SELATAN",0,"-","-","Rp 70.000"],
+["ORD_0004401",13,1300,0,"Rp 13.000","Saringan / Strainer","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. KOLAKA UTARA","SULAWESI TENGGARA",38000,"Rp 60.000","Rp 232.774","Rp 98.000"],
+["ORD_0004402",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","Agen SPX Express","COD (Bayar di Tempat)","KAB. PADANG PARIAMAN","SUMATERA BARAT",10000,"Rp 20.000","Rp 43.640","Rp 30.000"],
+["ORD_0004403",1,100,0,"-","Saringan / Strainer","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BOGOR","JAWA BARAT",0,"Rp 8.000","Rp 16.600","Rp 8.000"],
+["ORD_0004404",4,1120,1,"-","Aksesoris Pintu, Other, Sikat / Pembersih","Selesai","","Reguler (Cashless)-SPX Standard","Saldo ShopeePay","KAB. BEKASI","JAWA BARAT",0,"Rp 9.500","Rp 20.255","Rp 9.500"],
+["ORD_0004405",10,10500,0,"-","Botol / Gelas / Mug, Mangkok Sambal / Saus, Peralatan Makan","Selesai","","Reguler (Cashless)-SPX Standard","SPayLater","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 18.000","Rp 60.752","Rp 18.000"],
+["ORD_0004406",1,200,0,"-","Mangkok Sambal / Saus","Batal","Dibatalkan oleh Pembeli. Alasan: Ubah Pesanan yang Ada","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. KARIMUN","KEPULAUAN RIAU",0,"-","-","Rp 20.000"],
+["ORD_0004407",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. KARIMUN","KEPULAUAN RIAU",0,"Rp 20.000","Rp 15.500","Rp 20.000"],
+["ORD_0004408",2,400,0,"-","Mangkok Sambal / Saus","Selesai","","SPX Hemat","COD (Bayar di Tempat)","KAB. DELI SERDANG","SUMATERA UTARA",4100,"Rp 20.000","Rp 37.504","Rp 24.100"],
+["ORD_0004409",1,200,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. BEKASI","JAWA BARAT",0,"Rp 9.500","Rp 17.120","Rp 9.500"],
+["ORD_0004410",3,5100,0,"-","Nampan / Tray","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. BEKASI","JAWA BARAT",40000,"-","Rp 70.680","Rp 40.000"],
+["ORD_0004411",2,1000,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KOTA JAKARTA UTARA","DKI JAKARTA",0,"Rp 8.000","Rp 42.184","Rp 8.000"],
+["ORD_0004412",2,6000,0,"-","Other, Sapu / Pembersih Lantai","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KOTA JAKARTA PUSAT","DKI JAKARTA",10000,"Rp 20.000","Rp 75.000","Rp 30.000"],
+["ORD_0004413",5,1000,0,"-","Peralatan Makan","Selesai","","Reguler (Cashless)-SPX Standard","COD (Bayar di Tempat)","KAB. SANGGAU","KALIMANTAN BARAT",0,"Rp 40.000","Rp 153.880","Rp 40.000"],
+["ORD_0004414",3,13500,0,"-","Baskom / Mangkok Besar, Spatula","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KOTA TANGERANG","BANTEN",0,"Rp 14.400","Rp 46.500","Rp 14.400"],
+["ORD_0004415",9,900,0,"-","Saringan / Strainer","Selesai","","Hemat Kargo-SPX Hemat","Online Payment","KOTA JAKARTA SELATAN","DKI JAKARTA",0,"Rp 8.000","Rp 128.000","Rp 8.000"],
+["ORD_0004416",1,300,0,"-","Pisau / Alat Potong","Selesai","","Same Day-SPX Sameday","Online Payment","KOTA TANGERANG","BANTEN",6500,"Rp 10.000","Rp 36.500","Rp 16.500"],
+["ORD_0004417",1,500,0,"-","Celengan","Selesai","","Hemat Kargo-SPX Hemat","COD (Bayar di Tempat)","KAB. DELI SERDANG","SUMATERA UTARA",0,"Rp 20.000","Rp 22.540","Rp 20.000"],
+["ORD_0004418",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. CIANJUR","JAWA BARAT",3500,"Rp 10.000","Rp 14.500","Rp 13.500"],
+["ORD_0004419",3,1800,0,"-","Mangkok Sambal / Saus","Selesai","","Reguler (Cashless)-SPX Standard","Online Payment","KAB. KULON PROGO","DI YOGYAKARTA",0,"Rp 17.000","Rp 48.500","Rp 17.000"],
+["ORD_0004420",1,100,0,"-","Aksesoris Pintu","Selesai","","Hemat Kargo-SPX Hemat","Saldo ShopeePay","KAB. CIREBON","JAWA BARAT",2500,"Rp 10.000","Rp 13.500","Rp 12.500"],
+["ORD_0004421",1,300,0,"-","Mangkok Sambal / Saus","Selesai","","Hemat Kargo-J&T Economy","COD (Bayar di Tempat)","KAB. TAPIN","KALIMANTAN SELATAN",18500,"Rp 15.000","Rp 35.840","Rp 33.500"],
+["ORD_0004422",100,55000,0,"-","Lunch Box / Rantang","Selesai","","Kargo-JNE Trucking (JTR)","Online Payment","KAB. BANDUNG","JAWA BARAT",0,"-","-","Rp 0"]
+];
+
+// ============ PARSE ============
+function parseRp(s){ if(!s||s==='-'||s==='') return 0; return parseInt(String(s).replace(/[^\d]/g,''))||0; }
+const orders = rawData.map(r=>({
+  id:r[0], qty:r[1], weight:r[2], returned:r[3], discount:r[4],
+  category:r[5], status:r[6], cancelReason:r[7], shipping:r[8], payment:r[9],
+  city:r[10], province:r[11], shippingPaid:r[12], estDeduction:r[13],
+  totalPayment: parseRp(r[14]), estShipping: parseRp(r[15])
+}));
+
+// ============ AGGREGATIONS ============
+const totalOrders = orders.length;
+const completed = orders.filter(o=>o.status==='Selesai');
+const canceled = orders.filter(o=>o.status==='Batal');
+const totalRevenue = completed.reduce((s,o)=>s+o.totalPayment,0);
+const avgOrderValue = completed.length ? totalRevenue/completed.length : 0;
+const totalQty = orders.reduce((s,o)=>s+o.qty,0);
+const totalWeight = orders.reduce((s,o)=>s+o.weight,0);
+
+const statusCount = {}; orders.forEach(o=>statusCount[o.status]=(statusCount[o.status]||0)+1);
+const provinceCount = {}; const provinceRevenue = {};
+orders.forEach(o=>{
+  provinceCount[o.province]=(provinceCount[o.province]||0)+1;
+  if(o.status==='Selesai') provinceRevenue[o.province]=(provinceRevenue[o.province]||0)+o.totalPayment;
+});
+const topProvinces = Object.entries(provinceCount).sort((a,b)=>b[1]-a[1]);
+const topProvincesRev = Object.entries(provinceRevenue).sort((a,b)=>b[1]-a[1]);
+
+const paymentCount = {}; const paymentRevenue = {};
+orders.forEach(o=>{
+  paymentCount[o.payment]=(paymentCount[o.payment]||0)+1;
+  if(o.status==='Selesai') paymentRevenue[o.payment]=(paymentRevenue[o.payment]||0)+o.totalPayment;
+});
+const topPayments = Object.entries(paymentCount).sort((a,b)=>b[1]-a[1]);
+const topPaymentsRev = Object.entries(paymentRevenue).sort((a,b)=>b[1]-a[1]);
+
+const shippingCount = {}; orders.forEach(o=>shippingCount[o.shipping]=(shippingCount[o.shipping]||0)+1);
+const topShipping = Object.entries(shippingCount).sort((a,b)=>b[1]-a[1]);
+
+const categoryCount = {}; const categoryRevenue = {}; const categoryQty = {};
+orders.forEach(o=>{
+  o.category.split(',').forEach(c=>{
+    c=c.trim();
+    categoryCount[c]=(categoryCount[c]||0)+1;
+    categoryQty[c]=(categoryQty[c]||0)+o.qty;
+    if(o.status==='Selesai') categoryRevenue[c]=(categoryRevenue[c]||0)+o.totalPayment;
+  });
+});
+const topCategories = Object.entries(categoryCount).sort((a,b)=>b[1]-a[1]);
+const topCategoriesRev = Object.entries(categoryRevenue).sort((a,b)=>b[1]-a[1]);
+
+const cityCount = {}; orders.forEach(o=>cityCount[o.city]=(cityCount[o.city]||0)+1);
+const topCities = Object.entries(cityCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+// cancel reasons grouped
+const cancelCount = {};
+canceled.forEach(o=>{
+  let r = o.cancelReason;
+  if(r.includes('otomatis')){
+    if(r.includes('belum dibayar')) r='Otomatis: Belum Bayar';
+    else if(r.includes('Pengiriman gagal')) r='Otomatis: Pengiriman Gagal';
+    else r='Otomatis: Lainnya';
+  } else if(r.includes('Pembeli')){
+    if(r.includes('Ubah Pesanan')) r='Pembeli: Ubah Pesanan';
+    else if(r.includes('alamat')) r='Pembeli: Ubah Alamat';
+    else if(r.includes('pembayaran')) r='Pembeli: Pembayaran Sulit';
+    else r='Pembeli: Berubah Pikiran';
+  } else r = r || 'Lainnya';
+  cancelCount[r]=(cancelCount[r]||0)+1;
+});
+const topCancel = Object.entries(cancelCount).sort((a,b)=>b[1]-a[1]);
+
+// cancel per province
+const cancelByProvince = {};
+canceled.forEach(o=>{ cancelByProvince[o.province]=(cancelByProvince[o.province]||0)+1; });
+const topCancelProv = Object.entries(cancelByProvince).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+// Island mapping (estimate)
+const islandMap = {
+  'JAWA BARAT':'Jawa','DKI JAKARTA':'Jawa','JAWA TENGAH':'Jawa','JAWA TIMUR':'Jawa','BANTEN':'Jawa','DI YOGYAKARTA':'Jawa',
+  'SUMATERA UTARA':'Sumatera','SUMATERA SELATAN':'Sumatera','SUMATERA BARAT':'Sumatera','RIAU':'Sumatera','JAMBI':'Sumatera','LAMPUNG':'Sumatera','NANGGROE ACEH DARUSSALAM (NAD)':'Sumatera','KEPULAUAN RIAU':'Sumatera','BANGKA BELITUNG':'Sumatera',
+  'KALIMANTAN SELATAN':'Kalimantan','KALIMANTAN BARAT':'Kalimantan','KALIMANTAN TENGAH':'Kalimantan','KALIMANTAN TIMUR':'Kalimantan','KALIMANTAN UTARA':'Kalimantan',
+  'SULAWESI SELATAN':'Sulawesi','SULAWESI TENGAH':'Sulawesi','SULAWESI TENGGARA':'Sulawesi',
+  'BALI':'Bali & Nusa Tenggara','NUSA TENGGARA BARAT (NTB)':'Bali & Nusa Tenggara','NUSA TENGGARA TIMUR (NTT)':'Bali & Nusa Tenggara'
+};
+const islandCount = {};
+orders.forEach(o=>{
+  const isl = islandMap[o.province] || 'Lainnya';
+  islandCount[isl]=(islandCount[isl]||0)+1;
+});
+
+// ============ HELPERS ============
+const fmtRp = n => 'Rp ' + n.toLocaleString('id-ID');
+const fmtShort = n => n>=1e9? (n/1e9).toFixed(1)+' M' : n>=1e6? (n/1e6).toFixed(1)+' Jt' : n>=1e3? (n/1e3).toFixed(1)+' Rb' : n.toString();
+const palette = ['#4f46e5','#7c3aed','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6','#f97316','#84cc16'];
+
+// ============ NAV ============
+const pageMeta = {
+  dashboard:{title:'Dashboard',sub:'Ringkasan metrik utama bisnis'},
+  laporan:{title:'Laporan Ringkas',sub:'Insight & temuan utama untuk pengambilan keputusan'},
+  pesanan:{title:'Data Pesanan',sub:'Daftar lengkap seluruh pesanan'},
+  wilayah:{title:'Analisis Wilayah',sub:'Distribusi geografis pesanan dan revenue'},
+  pembayaran:{title:'Pembayaran & Pengiriman',sub:'Analisis metode bayar dan opsi kirim'},
+  produk:{title:'Kategori Produk',sub:'Performa tiap kategori produk'},
+  pembatalan:{title:'Analisis Pembatalan',sub:'Penyebab dan pola pembatalan pesanan'}
+};
+
+document.querySelectorAll('.nav-item').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const page = btn.dataset.page;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+page).classList.add('active');
+    document.getElementById('pageTitleText').textContent = pageMeta[page].title;
+    document.getElementById('pageSubText').textContent = pageMeta[page].sub;
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('open');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+document.getElementById('menuToggle').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+});
+document.getElementById('overlay').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+});
+
+// ============ KPI BUILDER ============
+function kpiCard(label,value,sub,cls,icon){
+  return `<div class="kpi-card ${cls}">
+    <div class="kpi-top"><div class="kpi-label">${label}</div><div class="kpi-icon">${icon}</div></div>
+    <div class="kpi-value">${value}</div>
+    <div class="kpi-sub">${sub}</div>
+  </div>`;
+}
+
+// dashboard KPIs
+document.getElementById('kpiDashboard').innerHTML =
+  kpiCard('Total Pesanan', totalOrders.toLocaleString('id-ID'), `${completed.length} selesai • ${canceled.length} batal`, 'info','📦') +
+  kpiCard('Total Pendapatan', fmtShort(totalRevenue), 'Dari pesanan selesai','success','💰') +
+  kpiCard('Rata-rata Order', fmtRp(Math.round(avgOrderValue)), 'Per pesanan selesai','purple','📊') +
+  kpiCard('Tingkat Pembatalan', ((canceled.length/totalOrders)*100).toFixed(1)+'%', canceled.length+' pesanan batal','danger','❌') +
+  kpiCard('Total Quantity', totalQty.toLocaleString('id-ID'), 'Unit produk','warning','📦') +
+  kpiCard('Total Berat', (totalWeight/1000).toFixed(1)+' Kg', 'Seluruh pesanan','info','⚖️');
+
+document.getElementById('sbOrders').textContent = totalOrders;
+document.getElementById('sbRevenue').textContent = fmtShort(totalRevenue);
+document.getElementById('sbCancel').textContent = ((canceled.length/totalOrders)*100).toFixed(1)+'%';
+
+// pesanan KPIs
+document.getElementById('kpiPesanan').innerHTML =
+  kpiCard('Total Pesanan', totalOrders, 'Semua status','info','📦') +
+  kpiCard('Selesai', completed.length, ((completed.length/totalOrders)*100).toFixed(1)+'% dari total','success','✅') +
+  kpiCard('Batal', canceled.length, ((canceled.length/totalOrders)*100).toFixed(1)+'% dari total','danger','❌') +
+  kpiCard('Total Revenue', fmtShort(totalRevenue), 'Pesanan selesai','purple','💰');
+
+// wilayah KPIs
+const totalProv = Object.keys(provinceCount).length;
+const topProv = topProvinces[0];
+document.getElementById('kpiWilayah').innerHTML =
+  kpiCard('Provinsi Tercover', totalProv, 'Wilayah Indonesia','info','🗺️') +
+  kpiCard('Provinsi Terlaris', topProv[0].length>15?topProv[0].slice(0,13)+'…':topProv[0], topProv[1]+' pesanan','success','🏆') +
+  kpiCard('Kota/Kabupaten', Object.keys(cityCount).length, 'Wilayah unik','purple','🏙️') +
+  kpiCard('Top Revenue Prov', topProvincesRev[0][0].length>15?topProvincesRev[0][0].slice(0,13)+'…':topProvincesRev[0][0], fmtShort(topProvincesRev[0][1]),'warning','💎');
+
+// pembayaran KPIs
+document.getElementById('kpiPembayaran').innerHTML =
+  kpiCard('Metode Bayar', topPayments.length, 'Metode berbeda','info','💳') +
+  kpiCard('Metode Terpopuler', topPayments[0][0].length>14?topPayments[0][0].slice(0,12)+'…':topPayments[0][0], topPayments[0][1]+' pesanan','success','🏆') +
+  kpiCard('Opsi Kirim', topShipping.length, 'Varian pengiriman','purple','🚚') +
+  kpiCard('Kirim Terpopuler', topShipping[0][0].length>14?topShipping[0][0].slice(0,12)+'…':topShipping[0][0], topShipping[0][1]+' pesanan','warning','📦');
+
+// produk KPIs
+document.getElementById('kpiProduk').innerHTML =
+  kpiCard('Total Kategori', topCategories.length, 'Kategori produk','info','🏷️') +
+  kpiCard('Kategori Terlaris', topCategories[0][0].length>16?topCategories[0][0].slice(0,14)+'…':topCategories[0][0], topCategories[0][1]+' pesanan','success','🏆') +
+  kpiCard('Revenue Terbesar', topCategoriesRev[0][0].length>16?topCategoriesRev[0][0].slice(0,14)+'…':topCategoriesRev[0][0], fmtShort(topCategoriesRev[0][1]),'purple','💎') +
+  kpiCard('Total Unit Terjual', totalQty.toLocaleString('id-ID'), 'Quantity','warning','📦');
+
+// pembatalan KPIs
+const autoCancel = canceled.filter(o=>o.cancelReason.includes('otomatis')).length;
+const buyerCancel = canceled.filter(o=>o.cancelReason.includes('Pembeli')).length;
+document.getElementById('kpiPembatalan').innerHTML =
+  kpiCard('Total Batal', canceled.length, ((canceled.length/totalOrders)*100).toFixed(1)+'% dari total','danger','❌') +
+  kpiCard('Batal Otomatis', autoCancel, 'Oleh sistem','warning','🤖') +
+  kpiCard('Batal oleh Pembeli', buyerCancel, 'Inisiatif pembeli','info','👤') +
+  kpiCard('Potensi Kerugian', fmtShort(canceled.reduce((s,o)=>s+o.estShipping,0)), 'Estimasi ongkir batal','purple','💸');
+
+// ============ CHARTS ============
+Chart.defaults.font.family = "'Inter','Segoe UI',system-ui,sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#64748b';
+
+function makeDoughnut(id,labels,data,colors){
+  return new Chart(document.getElementById(id),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:8}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'bottom',labels:{padding:14,usePointStyle:true,pointStyle:'circle',font:{size:11}}}}}
+  });
+}
+function makeBar(id,labels,data,color,horizontal=true,formatter){
+  const opts = {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:'#f1f5f9'},ticks:{precision:0}},y:{grid:{display:false}}}};
+  if(horizontal){ opts.indexAxis='y'; opts.scales={x:{grid:{color:'#f1f5f9'},ticks:{precision:0}},y:{grid:{display:false}}}; }
+  return new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:color,borderRadius:6,barThickness:horizontal?18:28}]},
+    options:opts
+  });
+}
+function truncate(s,n){ return s.length>n ? s.slice(0,n-1)+'…' : s; }
+
+// Dashboard
+makeDoughnut('chartStatus', Object.keys(statusCount), Object.values(statusCount), ['#10b981','#ef4444']);
+makeBar('chartProvince', topProvinces.slice(0,10).map(p=>truncate(p[0],18)), topProvinces.slice(0,10).map(p=>p[1]), palette[0]);
+
+// Trend line (sample 30 completed)
+const sampleCompleted = completed.slice(0,30);
+new Chart(document.getElementById('chartTrend'),{
+  type:'line',
+  data:{
+    labels: sampleCompleted.map((o,i)=>i+1),
+    datasets:[{
+      label:'Nilai Pesanan',
+      data: sampleCompleted.map(o=>o.totalPayment),
+      borderColor: palette[0],
+      backgroundColor: 'rgba(79,70,229,0.1)',
+      fill:true, tension:0.35, pointRadius:2, borderWidth:2
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{y:{grid:{color:'#f1f5f9'},ticks:{callback:v=>fmtShort(v)}},x:{grid:{display:false}}}}
+});
+
+// Payment mini
+makeDoughnut('chartPaymentMini', topPayments.slice(0,6).map(p=>truncate(p[0],14)), topPayments.slice(0,6).map(p=>p[1]), palette);
+
+// Laporan charts
+makeBar('chartRevProvince', topProvincesRev.slice(0,8).map(p=>truncate(p[0],16)), topProvincesRev.slice(0,8).map(p=>p[1]), palette[4]);
+
+// Pay x Status stacked (top 6 payment)
+const topPay6 = topPayments.slice(0,6).map(p=>p[0]);
+const paySelesai = topPay6.map(pm=>orders.filter(o=>o.payment===pm && o.status==='Selesai').length);
+const payBatal = topPay6.map(pm=>orders.filter(o=>o.payment===pm && o.status==='Batal').length);
+new Chart(document.getElementById('chartPayStatus'),{
+  type:'bar',
+  data:{labels: topPay6.map(p=>truncate(p,16)),
+    datasets:[
+      {label:'Selesai',data:paySelesai,backgroundColor:'#10b981',borderRadius:4},
+      {label:'Batal',data:payBatal,backgroundColor:'#ef4444',borderRadius:4}
+    ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:12}}},
+    scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#f1f5f9'},ticks:{precision:0}}}}
+});
+
+// Wilayah
+makeBar('chartProvinceFull', topProvinces.slice(0,10).map(p=>truncate(p[0],18)), topProvinces.slice(0,10).map(p=>p[1]), palette[0]);
+makeBar('chartRevProvinceFull', topProvincesRev.slice(0,10).map(p=>truncate(p[0],18)), topProvincesRev.slice(0,10).map(p=>p[1]), palette[4]);
+
+// island doughnut
+makeDoughnut('chartIsland', Object.keys(islandCount), Object.values(islandCount), palette);
+
+// Pembayaran
+makeBar('chartPaymentFull', topPayments.map(p=>truncate(p[0],18)), topPayments.map(p=>p[1]), palette[1], false);
+makeBar('chartShippingFull', topShipping.slice(0,8).map(p=>truncate(p[0],18)), topShipping.slice(0,8).map(p=>p[1]), palette[3], false);
+
+// Produk
+makeBar('chartCategoryFull', topCategories.slice(0,10).map(p=>truncate(p[0],20)), topCategories.slice(0,10).map(p=>p[1]), palette[2]);
+makeBar('chartCategoryRev', topCategoriesRev.slice(0,8).map(p=>truncate(p[0],18)), topCategoriesRev.slice(0,8).map(p=>p[1]), palette[5]);
+
+// Pembatalan
+makeBar('chartCancelFull', topCancel.map(p=>truncate(p[0],22)), topCancel.map(p=>p[1]), palette[6], false);
+makeBar('chartCancelProvince', topCancelProv.map(p=>truncate(p[0],18)), topCancelProv.map(p=>p[1]), palette[6]);
+
+// ============ TABLE ORDERS ============
+function renderOrders(list){
+  document.getElementById('tbodyOrders').innerHTML = list.map(o=>`
+    <tr>
+      <td><strong>${o.id}</strong></td>
+      <td>${o.qty}</td>
+      <td>${o.weight.toLocaleString('id-ID')}</td>
+      <td title="${o.category}">${truncate(o.category,30)}</td>
+      <td><span class="badge ${o.status==='Selesai'?'badge-selesai':'badge-batal'}">${o.status}</span></td>
+      <td>${truncate(o.shipping,24)}</td>
+      <td><span class="badge badge-info">${truncate(o.payment,18)}</span></td>
+      <td>${o.city}</td>
+      <td>${truncate(o.province,18)}</td>
+      <td><strong>${o.totalPayment>0?fmtRp(o.totalPayment):'-'}</strong></td>
+    </tr>
+  `).join('');
+}
+renderOrders(orders);
+
+function filterOrders(){
+  const q = document.getElementById('searchOrders').value.toLowerCase();
+  const st = document.getElementById('filterStatus').value;
+  const filtered = orders.filter(o=>{
+    const matchQ = !q || o.id.toLowerCase().includes(q) || o.city.toLowerCase().includes(q) ||
+                   o.category.toLowerCase().includes(q) || o.province.toLowerCase().includes(q) || o.payment.toLowerCase().includes(q);
+    const matchS = !st || o.status===st;
+    return matchQ && matchS;
+  });
+  renderOrders(filtered);
+}
+document.getElementById('searchOrders').addEventListener('input',filterOrders);
+document.getElementById('filterStatus').addEventListener('change',filterOrders);
+
+// Category table
+document.getElementById('tbodyCategories').innerHTML = topCategories.map(([name,cnt])=>`
+  <tr>
+    <td><strong>${name}</strong></td>
+    <td>${cnt}</td>
+    <td>${(categoryQty[name]||0).toLocaleString('id-ID')}</td>
+    <td>${fmtRp(categoryRevenue[name]||0)}</td>
+  </tr>
+`).join('');
+
+// City list
+document.getElementById('topCitiesList').innerHTML = topCities.map(([city,cnt],i)=>`
+  <div class="stat-row">
+    <div class="sr-label"><span class="dot" style="background:${palette[i%palette.length]}"></span>${truncate(city,30)}</div>
+    <div class="sr-value">${cnt} pesanan</div>
+  </div>
+`).join('');
+
+// Payment revenue list
+document.getElementById('paymentRevenueList').innerHTML = topPaymentsRev.slice(0,8).map(([name,val],i)=>`
+  <div class="stat-row">
+    <div class="sr-label"><span class="dot" style="background:${palette[i%palette.length]}"></span>${truncate(name,24)}</div>
+    <div class="sr-value">${fmtRp(val)}</div>
+  </div>
+`).join('');
+
+// Shipping order list
+document.getElementById('shippingOrderList').innerHTML = topShipping.slice(0,8).map(([name,cnt],i)=>`
+  <div class="stat-row">
+    <div class="sr-label"><span class="dot" style="background:${palette[i%palette.length]}"></span>${truncate(name,26)}</div>
+    <div class="sr-value">${cnt} pesanan</div>
+  </div>
+`).join('');
+
+// Cancel reasons list
+document.getElementById('cancelReasonList').innerHTML = topCancel.map(([name,cnt],i)=>`
+  <div class="stat-row">
+    <div class="sr-label"><span class="dot" style="background:${palette[i%palette.length]}"></span>${truncate(name,30)}</div>
+    <div class="sr-value">${cnt} (${((cnt/canceled.length)*100).toFixed(1)}%)</div>
+  </div>
+`).join('');
+
+// ============ REPORT INSIGHTS ============
+const cancelRate = ((canceled.length/totalOrders)*100).toFixed(1);
+const autoPct = ((autoCancel/canceled.length)*100).toFixed(0);
+const buyerPct = ((buyerCancel/canceled.length)*100).toFixed(0);
+
+document.getElementById('insightSales').innerHTML = `
+  <li>Total pendapatan mencapai <span class="highlight-num">${fmtRp(totalRevenue)}</span> dari ${completed.length} pesanan selesai.</li>
+  <li>Rata-rata nilai pesanan (AOV) sebesar <span class="highlight-num">${fmtRp(Math.round(avgOrderValue))}</span>.</li>
+  <li>Total <span class="highlight-num">${totalQty.toLocaleString('id-ID')} unit</span> produk dengan berat total <span class="highlight-num">${(totalWeight/1000).toFixed(1)} Kg</span>.</li>
+  <li>Pesanan terbesar: ${orders.filter(o=>o.status==='Selesai').sort((a,b)=>b.totalPayment-a.totalPayment)[0].id} senilai ${fmtRp(orders.filter(o=>o.status==='Selesai').sort((a,b)=>b.totalPayment-a.totalPayment)[0].totalPayment)}.</li>
+`;
+
+document.getElementById('insightRegion').innerHTML = `
+  <li>Pesanan tersebar di <span class="highlight-num">${totalProv} provinsi</span> dan <span class="highlight-num">${Object.keys(cityCount).length} kota/kabupaten</span>.</li>
+  <li>Provinsi terlaris: <span class="highlight-num">${topProvinces[0][0]}</span> dengan ${topProvinces[0][1]} pesanan.</li>
+  <li>Revenue terbesar dari: <span class="highlight-num">${topProvincesRev[0][0]}</span> (${fmtShort(topProvincesRev[0][1])}).</li>
+  <li>Pulau Jawa mendominasi dengan ${islandCount['Jawa']||0} pesanan (${((islandCount['Jawa']/totalOrders)*100).toFixed(0)}%).</li>
+`;
+
+document.getElementById('insightPayment').innerHTML = `
+  <li>Metode bayar terpopuler: <span class="highlight-num">${topPayments[0][0]}</span> (${topPayments[0][1]} pesanan).</li>
+  <li>COD masih mendominasi dengan ${orders.filter(o=>o.payment.includes('COD')).length} pesanan.</li>
+  <li>E-wallet (ShopeePay + SeaBank + SPayLater): ${orders.filter(o=>o.payment.includes('ShopeePay')||o.payment.includes('SeaBank')||o.payment.includes('SPayLater')).length} pesanan.</li>
+  <li>Opsi kirim terpopuler: <span class="highlight-num">${topShipping[0][0]}</span> (${topShipping[0][1]} pesanan).</li>
+`;
+
+document.getElementById('insightRisk').innerHTML = `
+  <li>Tingkat pembatalan <span class="highlight-num">${cancelRate}%</span> (${canceled.length} dari ${totalOrders} pesanan).</li>
+  <li><span class="highlight-num">${autoPct}%</span> pembatalan terjadi otomatis oleh sistem (belum bayar/gagal kirim).</li>
+  <li><span class="highlight-num">${buyerPct}%</span> pembatalan inisiatif pembeli (ubah pesanan/alamat).</li>
+  <li>Alasan utama: <span class="highlight-num">${topCancel[0][0]}</span> (${topCancel[0][1]} kasus).</li>
+`;
+
+document.getElementById('insightProduct').innerHTML = `
+  <li>Total <span class="highlight-num">${topCategories.length} kategori</span> produk berbeda.</li>
+  <li>Kategori terlaris: <span class="highlight-num">${topCategories[0][0]}</span> (${topCategories[0][1]} pesanan).</li>
+  <li>Revenue terbesar: <span class="highlight-num">${topCategoriesRev[0][0]}</span> (${fmtShort(topCategoriesRev[0][1])}).</li>
+  <li>Top 3 kategori: ${topCategories.slice(0,3).map(c=>c[0]).join(', ')}.</li>
+`;
+
+document.getElementById('insightShipping').innerHTML = `
+  <li>Total <span class="highlight-num">${topShipping.length} opsi</span> pengiriman berbeda digunakan.</li>
+  <li>Opsi favorit: <span class="highlight-num">${topShipping[0][0]}</span> (${topShipping[0][1]} pesanan).</li>
+  <li>Hemat Kargo-SPX Hemat mendominasi dengan ${orders.filter(o=>o.shipping.includes('Hemat Kargo-SPX Hemat')).length} pesanan.</li>
+  <li>Kargo JNE Trucking dipakai untuk pesanan berat (>10Kg).</li>
+`;
+
+document.getElementById('cancelRecommendations').innerHTML = `
+  <li>Optimalkan pengingat pembayaran otomatis untuk menekan pembatalan sistemik.</li>
+  <li>Perbaiki proses checkout agar pembeli tidak perlu "ubah pesanan" (${topCancel.find(c=>c[0].includes('Ubah Pesanan'))?.[1]||0} kasus).</li>
+  <li>Tingkatkan konfirmasi alamat sebelum pengiriman untuk mengurangi perubahan alamat.</li>
+  <li>Evaluasi kurir untuk kasus "Pengiriman Gagal" — pertimbangkan alternatif kurir.</li>
+  <li>Terapkan konfirmasi berlapis untuk pesanan bernilai tinggi.</li>
+`;
+</script>
+</body>
+</html>
